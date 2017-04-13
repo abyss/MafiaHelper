@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
-const XPDB = require('xpdb');
+// const XPDB = require('xpdb');
 
 const stripIndents = require('common-tags').stripIndents;
 
@@ -21,6 +21,7 @@ const bot = exports.client = new Discord.Client();
 const config = bot.config = require('./config.json');
 
 const logger = bot.logger = new Managers.Logger(bot);
+logger.inject();
 
 const commands = bot.commands = new Managers.CommandManager(bot);
 const stats = bot.stats = new Managers.Stats(bot);
@@ -39,8 +40,6 @@ if (!config.botToken || !/^[A-Za-z0-9\._\-]+$/.test(config.botToken)) {
 }
 
 bot.on('ready', () => {
-    logger.inject();
-
     bot.utils = require('./utils');
 
     commands.loadCommands(path.join(__dirname, 'commands'));
@@ -103,7 +102,7 @@ bot.on('disconnect', console.warn);
 bot.login(config.botToken);
 
 process.on('uncaughtException', (err) => {
-    let errorMsg = err.stack.replace(new RegExp(`${__dirname}\/`, 'g'), './');
+    let errorMsg = (err.stack || err || '').toString().replace(new RegExp(`${__dirname}\/`, 'g'), './');
     logger.severe(errorMsg);
 });
 

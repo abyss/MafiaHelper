@@ -1,7 +1,7 @@
 # SharpCore
 SharpCore is a userbot core for Discord.js v11. It doesn't have much use by itself, and will need commands and features added as you wish for your own bot.
 
-It is based on SharpBot by Rayzr522, which you can find [here](https://github.com/Rayzr522/SharpBot)
+It is based on SharpBot by Rayzr522, which you can find [here](https://github.com/Rayzr522/SharpBot).
 
 #### Table of contents
 - [Requirements](#requirements)
@@ -33,6 +33,7 @@ yarn
 
 - Rename `config.json.example` in the `src` folder to `config.json`
 - Edit `config.json` and enter your user-token
+- Put an avatar in the SharpCore folder with the name `avatar.png`.
 
 ### Running
 Assuming you have set up the config file with the user-token, just do `yarn start` to run the bot.

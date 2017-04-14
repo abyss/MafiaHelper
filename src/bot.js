@@ -57,18 +57,6 @@ bot.on('ready', () => {
     delete bot.user.email;
     delete bot.user.verified;
 
-    fs.stat(path.resolve(__dirname, '../avatar.png'), function(err) {
-        if(err === null) {
-            bot.user.setAvatar(path.resolve(__dirname, '../avatar.png'));
-        } else if(err.code === 'ENOENT') {
-            // avatar does not exist.
-            logger.severe('avatar.png missing, consider copying the example over.');
-        } else {
-            logger.severe(`Error reading avatar file: ${err.code}`);
-        }
-    });
-
-
     bot.user.setGame(`${config.prefix}help`);
 
     logger.info('Bot loaded');

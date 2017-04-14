@@ -33,7 +33,6 @@ yarn
 
 - Rename `config.json.example` in the `src` folder to `config.json`
 - Edit `config.json` and enter your user-token (Obtain one [here](https://discordapp.com/developers/applications/me))
-- Put an avatar in the SharpCore folder with the name `avatar.png`.
 
 ### Running
 Assuming you have set up the config file with the user-token, just do `yarn start` to run the bot.

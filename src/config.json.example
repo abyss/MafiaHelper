@@ -1,5 +1,4 @@
 {
-  // Acquire a botToken at https://discordapp.com/developers/applications/me
-  "botToken": "enter the user token for the bot",
+  "botToken": "Acquire a botToken at https://discordapp.com/developers/applications/me",
   "prefix": "-"
 }

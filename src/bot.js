@@ -18,7 +18,7 @@ const chalk = require('chalk');
 const stripIndents = require('common-tags').stripIndents;
 
 const bot = exports.client = new Discord.Client();
-const config = bot.config = require('./config.json');
+const config = bot.config = require('../config.json');
 
 const logger = bot.logger = new Managers.Logger(bot);
 logger.inject();

@@ -1,13 +1,7 @@
 exports.run = (bot, msg) => {
-    msg.channel.send(':stopwatch: Ping').then(m => {
-        var time = msg.editedTimestamp - msg.createdTimestamp;
-        bot.utils.playAnimation(m, 500, [
-            ':stopwatch: __P__ing',
-            ':stopwatch: __Pi__ng',
-            ':stopwatch: __Pin__g',
-            ':stopwatch: __Ping__',
-            `:stopwatch: ***Pong!*** \`${time}ms\``
-        ]);
+    msg.channel.send(':watch: **Pong!**').then(m => {
+        let time = m.createdTimestamp - msg.createdTimestamp;
+        m.edit(` :watch: **Pong!** \`${time}ms\``);
     });
 };
 

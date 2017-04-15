@@ -12,7 +12,7 @@ const formatTime = (time) => {
 exports.run = (bot, msg) => {
 
     msg.channel.sendEmbed(
-        bot.utils.embed(`${bot.user.username}'s Stats', '***This message will dissappear in 15 seconds.***`, [
+        bot.utils.embed(`${bot.user.username}'s Stats'`, '***This message will dissappear in 15 seconds.***', [
             {
                 name: ':outbox_tray: Messages sent',
                 value: bot.stats.get('messages-sent') || 0,
@@ -50,7 +50,7 @@ exports.run = (bot, msg) => {
                 value: (bot.user.presence.game || {}).name || 'None'
             }
         ], { inline: true })
-    ).catch(msg.error).then(m => m.delete(15000));
+    ).then(m => m.delete(15000));
 };
 
 exports.info = {

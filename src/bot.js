@@ -9,7 +9,7 @@
 const Managers = require('./managers');
 
 const Discord = require('discord.js');
-const fs = require('fs');
+const fse = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 
@@ -27,7 +27,7 @@ const commands = bot.commands = new Managers.CommandManager(bot);
 const stats = bot.stats = new Managers.Stats(bot);
 
 let dataFolder = path.join(__dirname, '../data/');
-if (!fs.existsSync(dataFolder)) fs.mkdirSync(dataFolder);
+if (!fse.existsSync(dataFolder)) fse.mkdirSync(dataFolder);
 
 // const db = bot.db = new XPDB(dataFolder);
 

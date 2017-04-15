@@ -70,7 +70,7 @@ bot.on('ready', () => {
 
     delete bot.user.email;
     delete bot.user.verified;
-    
+
     bot.user.setGame(`${config.prefix}help`);
 
     logger.info('Bot loaded');
@@ -87,7 +87,7 @@ bot.on('message', msg => {
     if (!msg.content.startsWith(config.prefix)) return;
     if (msg.author.bot) return;
     
-    var split = msg.content.split(/[ \n]/);
+    var split = msg.content.split(' ');
     var base = split[0].substr(config.prefix.length);
     var args = split.slice(1);
 

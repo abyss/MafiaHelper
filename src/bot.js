@@ -9,7 +9,7 @@
 const Managers = require('./managers');
 
 const Discord = require('discord.js');
-const fs = require('fs');
+const fse = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 
@@ -18,7 +18,6 @@ const chalk = require('chalk');
 const stripIndents = require('common-tags').stripIndents;
 
 const bot = exports.client = new Discord.Client();
-const config = bot.config = require('../config.json');
 
 const logger = bot.logger = new Managers.Logger(bot);
 logger.inject();
@@ -26,22 +25,37 @@ logger.inject();
 const commands = bot.commands = new Managers.CommandManager(bot);
 const stats = bot.stats = new Managers.Stats(bot);
 
-let dataFolder = path.join(__dirname, '../data/');
-if (!fs.existsSync(dataFolder)) fs.mkdirSync(dataFolder);
+try {
+    bot.config = fse.readJsonSync(path.join(__dirname, '../config.json'));
+} catch (err) {
+    if (err.name === 'SyntaxError') {
+        logger.severe('Configuration file is not valid JSON. Please verify it\'s contents.');
+    } else if (err.code === 'ENOENT') {
+        logger.severe('Configuration not found. Make sure you copy config.json.example to config.json and fill it out.');
+    } else {
+        logger.severe('Unknown error loading configuration file:');
+        logger.severe(err);
+    }
+    process.exit(1);
+}
 
-// const db = bot.db = new XPDB(dataFolder);
-
-// See: https://discordapi.com/permissions.html for permissions number
-let invite_template = 'https://discordapp.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=3072';
+const config = bot.config;
 
 if (!config.botToken || !/^[A-Za-z0-9\._\-]+$/.test(config.botToken)) {
     logger.severe('Config is missing a valid bot token! Please acquire one at https://discordapp.com/developers/applications/me');
     process.exit(1);
 }
 
+let dataFolder = path.join(__dirname, '../data/');
+if (!fse.existsSync(dataFolder)) fse.mkdirSync(dataFolder);
+
+// const db = bot.db = new XPDB(dataFolder);
+
+let invite_template = 'https://discordapp.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=3072';
+
 bot.on('ready', () => {
     bot.utils = require('./utils');
-
+    
     commands.loadCommands(path.join(__dirname, 'commands'));
 
     logger.info(stripIndents`Stats:
@@ -56,7 +70,7 @@ bot.on('ready', () => {
 
     delete bot.user.email;
     delete bot.user.verified;
-
+    
     bot.user.setGame(`${config.prefix}help`);
 
     logger.info('Bot loaded');

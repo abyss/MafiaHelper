@@ -21,7 +21,7 @@ class CommandManager {
             return 'info object is missing a valid name field';
         return null;
     }
-
+    
     loadCommands(folder) {
         this._commands = [];
         this._categories = [];

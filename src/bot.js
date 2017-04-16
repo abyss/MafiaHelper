@@ -88,7 +88,7 @@ bot.on('message', msg => {
     if (msg.author.bot) return;
     
     var split = msg.content.split(' ');
-    var base = split[0].substr(config.prefix.length);
+    var base = split[0].substr(config.prefix.length).toLowerCase();
     var args = split.slice(1);
 
     var command = commands.get(base);

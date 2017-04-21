@@ -12,8 +12,7 @@ const Discord = require('discord.js');
 const fse = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
-
-// const XPDB = require('xpdb');
+const XPDB = require('xpdb');
 
 const stripIndents = require('common-tags').stripIndents;
 
@@ -21,6 +20,10 @@ const bot = exports.client = new Discord.Client();
 
 const logger = bot.logger = new Managers.Logger(bot);
 logger.inject();
+
+let dataFolder = path.join(__dirname, '../data/');
+if (!fse.existsSync(dataFolder)) fse.mkdirSync(dataFolder);
+bot.db = new XPDB(dataFolder);
 
 const commands = bot.commands = new Managers.CommandManager(bot);
 const stats = bot.stats = new Managers.Stats(bot);
@@ -41,15 +44,15 @@ try {
 
 const config = bot.config;
 
+// Mafia Bot Specific Caches - filled in on ready
+bot.mafia = {};
+bot.mafia.mods = [];
+bot.mafia.channels = [];
+
 if (!config.botToken || !/^[A-Za-z0-9\._\-]+$/.test(config.botToken)) {
     logger.severe('Config is missing a valid bot token! Please acquire one at https://discordapp.com/developers/applications/me');
     process.exit(1);
 }
-
-let dataFolder = path.join(__dirname, '../data/');
-if (!fse.existsSync(dataFolder)) fse.mkdirSync(dataFolder);
-
-// const db = bot.db = new XPDB(dataFolder);
 
 let invite_template = 'https://discordapp.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=3072';
 
@@ -73,9 +76,18 @@ bot.on('ready', () => {
 
     bot.user.setGame(`${config.prefix}help`);
 
+    // Load Mafia caches
+    bot.db.get('mafia.mods').then(mods => {
+        bot.mafia.mods = mods;
+    });
+
+    bot.db.get('mafia.channels').then(channel_list => {
+        bot.mafia.channels = channel_list;
+    });
+
     logger.info('Bot loaded');
     logger.info(`Use the following link to invite ${bot.user.username} to your server:\n` + chalk.blue(invite_template.replace('YOUR_CLIENT_ID', bot.user.id)));
-
+    
 });
 
 bot.on('message', msg => {
@@ -103,6 +115,37 @@ bot.on('warn', console.warn);
 bot.on('disconnect', console.warn);
 
 bot.login(config.botToken);
+
+bot.on('messageUpdate', (oldMsg, newMsg) => {
+    let mods = bot.mafia.mods;
+    let channels = bot.mafia.channels;
+    if (oldMsg.author.bot) return; // #nope.
+    if (oldMsg.content === newMsg.content) return; // lol embeds do this. srsly.
+
+    if (channels.indexOf(oldMsg.channel.id) > -1 && mods.indexOf(oldMsg.author.id) < 0) {
+        mods.forEach(modid => {
+            let mod = bot.users.get(modid);
+            mod.send(`This message from <@${oldMsg.author.id}> was edited in <#${oldMsg.channel.id}> on ${oldMsg.guild.name}: \n**Old**:`);
+            mod.send(`\`\`\`${oldMsg.content}\`\`\``);
+            mod.send('**New:**');
+            mod.send(`\`\`\`${newMsg.content}\`\`\``);
+        });
+    }
+});
+
+bot.on('messageDelete', (msg) => {
+    let mods = bot.mafia.mods;
+    let channels = bot.mafia.channels;
+    if (msg.author.bot) return;
+
+    if (channels.indexOf(msg.channel.id) > -1 && mods.indexOf(msg.author.id) < 0) {
+        mods.forEach(modid => {
+            let mod = bot.users.get(modid);
+            mod.send(`This message from <@${msg.author.id}> was deleted in <#${msg.channel.id}> on ${msg.guild.name}:`);
+            mod.send(`\`\`\`${msg.content}\`\`\``);
+        });
+    }
+});
 
 process.on('uncaughtException', (err) => {
     let errorMsg = (err.stack || err || '').toString().replace(new RegExp(`${__dirname}\/`, 'g'), './');

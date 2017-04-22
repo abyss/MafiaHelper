@@ -4,7 +4,7 @@ exports.run = function (bot, msg, args) {
 
     if (args.length < 1) {
         msg.channel.send(`:negative_squared_cross_mark:  |  If you want to unvote, type ${bot.config.prefix}unvote.`);
-        return; 
+        return;
     }
 
     if (channels.indexOf(msg.channel.id) > -1) {

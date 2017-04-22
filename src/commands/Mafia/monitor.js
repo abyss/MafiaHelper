@@ -7,7 +7,7 @@ exports.run = function (bot, msg, args) {
     }
 
     bot.db.get('mafia.channels').then(channel_list => {
-        let output = [];        
+        let output = [];
         if (typeof channel_list === 'undefined') {
             channel_list = [];
         }
@@ -30,13 +30,13 @@ exports.run = function (bot, msg, args) {
                 .setTitle('Channels to Monitor:')
                 .setDescription(channel_mentions.join('\n'));
 
-            msg.channel.sendEmbed(output);    
+            msg.channel.sendEmbed(output);
             return;
         }
-        
+
         if (msg.mentions.channels.size < 1) {
             msg.channel.send(':negative_squared_cross_mark:  |  If you want to add a monitored channel, you need to tag the channel.');
-            return; 
+            return;
         }
 
         msg.mentions.channels.forEach(chan => {

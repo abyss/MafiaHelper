@@ -11,7 +11,7 @@ exports.run = (bot, msg) => {
             `
         };
     });
-    
+
     msg.channel.sendEmbed(bot.utils.embed(`${bot.user.username}'s Servers`, '\u200b', servers, { inline: true }));
 };
 

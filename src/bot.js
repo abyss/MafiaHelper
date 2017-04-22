@@ -58,7 +58,7 @@ let invite_template = 'https://discordapp.com/api/oauth2/authorize?client_id=YOU
 
 bot.on('ready', () => {
     bot.utils = require('./utils');
-    
+
     commands.loadCommands(path.join(__dirname, 'commands'));
 
     logger.info(stripIndents`Stats:
@@ -87,7 +87,7 @@ bot.on('ready', () => {
 
     logger.info('Bot loaded');
     logger.info(`Use the following link to invite ${bot.user.username} to your server:\n` + chalk.blue(invite_template.replace('YOUR_CLIENT_ID', bot.user.id)));
-    
+
 });
 
 bot.on('message', msg => {
@@ -95,10 +95,10 @@ bot.on('message', msg => {
     if (msg.isMentioned(bot.user)) {
         stats.increment('mentions');
     }
-    
+
     if (!msg.content.startsWith(config.prefix)) return;
     if (msg.author.bot) return;
-    
+
     var split = msg.content.split(' ');
     var base = split[0].substr(config.prefix.length).toLowerCase();
     var args = split.slice(1);
@@ -107,7 +107,7 @@ bot.on('message', msg => {
 
     if (command) {
         commands.execute(msg, command, args);
-    } 
+    }
 });
 
 bot.on('error', console.error);

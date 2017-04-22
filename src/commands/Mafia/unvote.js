@@ -1,4 +1,4 @@
-exports.run = function (bot, msg, args) {
+exports.run = function (bot, msg) {
     let mods = bot.mafia.mods;
     let channels = bot.mafia.channels;
 

@@ -7,7 +7,7 @@ exports.run = function (bot, msg, args) {
     }
 
     bot.db.get('mafia.mods').then(mods => {
-        let output = [];        
+        let output = [];
         if (typeof mods === 'undefined') {
             mods = [];
         }
@@ -17,19 +17,19 @@ exports.run = function (bot, msg, args) {
 
             // Update cache
             bot.mafia.mods = mods;
-            
+
             output = new RichEmbed()
                 .setColor(bot.utils.randomColor())
                 .setTitle('Mafia Mods:')
                 .setDescription(mod_mentions.join('\n'));
 
-            msg.channel.sendEmbed(output);    
+            msg.channel.sendEmbed(output);
             return;
         }
-        
+
         if (msg.mentions.users.size < 1) {
             msg.channel.send(':negative_squared_cross_mark:  |  If you want to add a Mafia Mod, you need to tag the users.');
-            return; 
+            return;
         }
 
         msg.mentions.users.forEach(user => {

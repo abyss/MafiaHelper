@@ -48,6 +48,32 @@ const config = bot.config;
 bot.mafia = {};
 bot.mafia.mods = [];
 bot.mafia.channels = [];
+bot.mafia.votes = [];
+bot.mafia.buildVoteTable = () => {
+    let vote_table = new Map();
+    
+    bot.mafia.votes.forEach(vote => {
+        if (!vote_table.has(vote.target)) {
+            vote_table.set(vote.target, []);
+        }
+
+        vote_table.get(vote.target).push(vote.voter);
+    });
+
+    return vote_table;
+};
+
+bot.mafia.buildVoteOutput = () => {
+    let vote_table = bot.mafia.buildVoteOutput();
+    let output = [];
+
+    // Build:
+    // __**Target**__
+    // Voter
+    // Voter
+    
+    return output.join('\n');
+};
 
 if (!config.botToken || !/^[A-Za-z0-9\._\-]+$/.test(config.botToken)) {
     logger.severe('Config is missing a valid bot token! Please acquire one at https://discordapp.com/developers/applications/me');
@@ -83,6 +109,10 @@ bot.on('ready', () => {
 
     bot.db.get('mafia.channels').then(channel_list => {
         bot.mafia.channels = channel_list;
+    });
+
+    bot.db.get('mafia.votes').then(votes => {
+        bot.mafia.votes = votes;
     });
 
     logger.info('Bot loaded');

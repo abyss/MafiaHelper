@@ -49,9 +49,10 @@ bot.mafia = {};
 bot.mafia.mods = [];
 bot.mafia.channels = [];
 bot.mafia.votes = [];
+
 bot.mafia.buildVoteTable = () => {
     let vote_table = new Map();
-    
+
     bot.mafia.votes.forEach(vote => {
         if (!vote_table.has(vote.target)) {
             vote_table.set(vote.target, []);
@@ -64,14 +65,24 @@ bot.mafia.buildVoteTable = () => {
 };
 
 bot.mafia.buildVoteOutput = () => {
-    let vote_table = bot.mafia.buildVoteOutput();
+    let vote_table = bot.mafia.buildVoteTable();
     let output = [];
+    output.push(':ballot_box: **Current Vote Count:** :ballot_box:\n');
 
-    // Build:
-    // __**Target**__
-    // Voter
-    // Voter
-    
+    if (vote_table.size === 0) {
+        output.push('There are currently no votes.');
+    }
+
+    for (let [key, value] of vote_table) {
+        output.push(`__**${bot.users.get(key).username}**__ \`(${value.length})\``);
+
+        value.forEach(voter => {
+            output.push(bot.users.get(voter).username);
+        });
+
+        output.push('');
+    }
+
     return output.join('\n');
 };
 
@@ -86,6 +97,11 @@ bot.on('ready', () => {
     bot.utils = require('./utils');
 
     commands.loadCommands(path.join(__dirname, 'commands'));
+
+    (title => {
+        process.title = title;
+        process.stdout.write(`\u001B]0;${title}\u0007`);
+    })(`SharpCore - ${bot.user.username}`);
 
     logger.info(stripIndents`Stats:
         - User: ${bot.user.username}#${bot.user.discriminator} <ID: ${bot.user.id}>
@@ -104,15 +120,15 @@ bot.on('ready', () => {
 
     // Load Mafia caches
     bot.db.get('mafia.mods').then(mods => {
-        bot.mafia.mods = mods;
+        bot.mafia.mods = mods || [];
     });
 
     bot.db.get('mafia.channels').then(channel_list => {
-        bot.mafia.channels = channel_list;
+        bot.mafia.channels = channel_list || [];
     });
 
     bot.db.get('mafia.votes').then(votes => {
-        bot.mafia.votes = votes;
+        bot.mafia.votes = votes || [];
     });
 
     logger.info('Bot loaded');

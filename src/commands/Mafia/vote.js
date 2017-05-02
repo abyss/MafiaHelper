@@ -1,20 +1,19 @@
 exports.run = function (bot, msg, args) {
-    let mods = bot.mafia.mods;
     let channels = bot.mafia.channels;
-    
 
     // TODO: Add player
     // TODO: Check if user is player.
     // TODO: Vote Clear
-    // TODO: Unvote
 
     if (args.length < 1) {
         msg.channel.send(`:negative_squared_cross_mark:  |  If you want to unvote, type ${bot.config.prefix}unvote.`);
+        // msg.react(':no_entry:');
         return;
     }
 
     if (msg.mentions.users.size < 1) {
         msg.channel.send(':negative_squared_cross_mark:  |  If you want to vote, you need to tag the person.');
+        // msg.react(':no_entry:');
         return;
     }
 
@@ -24,13 +23,20 @@ exports.run = function (bot, msg, args) {
             'voter': msg.author.id,
             'target': voted_user.id
         };
-        
+
+        if (typeof bot.mafia.votes === 'undefined') {
+            bot.mafia.votes = [];
+        }
+
         bot.mafia.votes = bot.mafia.votes.filter(vote => vote.voter !== msg.author.id);
         bot.mafia.votes.push(vote);
 
         bot.db.put('mafia.votes', bot.mafia.votes).then(() => {
-            msg.channel.send(`:ballot_box:  |  **${msg.author.username}** has voted for ${voted_user.username}`);
-            // TODO: Ballot count
+            let output = bot.mafia.buildVoteOutput();
+            // msg.react('🆗');
+            if (output) {
+                msg.channel.send(output);
+            }
         });
     }
 };

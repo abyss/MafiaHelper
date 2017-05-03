@@ -1,7 +1,11 @@
 const oneLine = require('common-tags').oneLine;
 
 exports.run = (bot, msg) => {
-
+    if (!msg.member.hasPermission('ADMINISTRATOR')) {
+        msg.channel.send(':negative_squared_cross_mark:  |  You are not an administrator.');
+        return;
+    }
+    
     let servers = bot.guilds.array().sort((a, b) => b.memberCount - a.memberCount).map(guild => {
         return {
             name: guild.name,

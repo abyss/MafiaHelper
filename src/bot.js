@@ -74,7 +74,9 @@ bot.mafia.buildVoteOutput = () => {
     }
 
     for (let [key, value] of vote_table) {
-        output.push(`__**${bot.users.get(key).username}**__ \`(${value.length})\``);
+        let target = bot.users.get(key).username || 'No Lynch';
+
+        output.push(`__**${target}**__ \`(${value.length})\``);
 
         value.forEach(voter => {
             output.push(bot.users.get(voter).username);

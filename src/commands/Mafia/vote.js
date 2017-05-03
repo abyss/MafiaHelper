@@ -5,24 +5,25 @@ exports.run = function (bot, msg, args) {
     // TODO: Check if user is player.
     // TODO: Vote Clear
 
-    if (args.length < 1) {
-        msg.channel.send(`:negative_squared_cross_mark:  |  If you want to unvote, type ${bot.config.prefix}unvote.`);
-        // msg.react(':no_entry:');
-        return;
-    }
-
-    if (msg.mentions.users.size < 1) {
-        msg.channel.send(':negative_squared_cross_mark:  |  If you want to vote, you need to tag the person.');
-        // msg.react(':no_entry:');
-        return;
-    }
-
     if (channels.indexOf(msg.channel.id) > -1) {
-        let voted_user = msg.mentions.users.last();
-        let vote = {
-            'voter': msg.author.id,
-            'target': voted_user.id
-        };
+        const error_response = `:negative_squared_cross_mark:  |  Please vote for a player by mentioning, or nolynch, or use \`${bot.config.prefix}unvote\``;
+        
+        if (args.length < 1) {
+            msg.channel.send(error_response);
+            return;
+        }
+
+        let vote = {};
+        vote.voter = msg.author.id;
+
+        if (msg.mentions.users.size > 1) {
+            vote.target = msg.mentions.users.last().id;
+        } else if (args[0] === 'nolynch' || args[0] === "nl" || args[0] === "no") {
+            vote.target = '0';
+        } else {
+            msg.channel.send(error_response);
+            return;
+        }
 
         if (typeof bot.mafia.votes === 'undefined') {
             bot.mafia.votes = [];

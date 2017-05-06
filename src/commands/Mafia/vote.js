@@ -3,11 +3,10 @@ exports.run = function (bot, msg, args) {
 
     // TODO: Add player
     // TODO: Check if user is player.
-    // TODO: Vote Clear
 
     if (channels.indexOf(msg.channel.id) > -1) {
-        const error_response = `:negative_squared_cross_mark:  |  Please vote for a player by mentioning, or nolynch, or use \`${bot.config.prefix}unvote\``;
-        
+        const error_response = `:negative_squared_cross_mark:  |  Please vote for a player by mentioning them, or use \`${bot.config.prefix}vote nolynch\` or \`${bot.config.prefix}unvote\``;
+
         if (args.length < 1) {
             msg.channel.send(error_response);
             return;
@@ -16,9 +15,9 @@ exports.run = function (bot, msg, args) {
         let vote = {};
         vote.voter = msg.author.id;
 
-        if (msg.mentions.users.size > 1) {
+        if (msg.mentions.users.size > 0) {
             vote.target = msg.mentions.users.last().id;
-        } else if (args[0] === 'nolynch' || args[0] === "nl" || args[0] === "no") {
+        } else if (args[0] === 'nolynch' || args[0] === 'nl' || args[0] === 'no') {
             vote.target = '0';
         } else {
             msg.channel.send(error_response);

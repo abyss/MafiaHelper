@@ -67,19 +67,38 @@ bot.mafia.buildVoteTable = () => {
 bot.mafia.buildVoteOutput = () => {
     let vote_table = bot.mafia.buildVoteTable();
     let output = [];
-    output.push(':ballot_box: **Current Vote Count:** :ballot_box:\n');
+    let primary_guild = bot.guilds.get(bot.config.primary_server);
+
+    if (!primary_guild.available) {
+        output.push(':negative_squared_cross_mark:  |  ERROR: Primary Server not available.');
+        return;
+    }
+
+    output.push(':ballot_box: **Current Vote Count** :ballot_box:\n');
 
     if (vote_table.size === 0) {
         output.push('There are currently no votes.');
     }
 
     for (let [key, value] of vote_table) {
-        let target = bot.users.get(key).username || 'No Lynch';
+        let target;
+
+        if (key === '0') {
+            target = 'No Lynch';
+        } else {
+            let target_member = primary_guild.members.get(key);
+
+            if (target_member) {
+                target = target_member.displayName;
+            } else {
+                target = `Unknown User: ${key}`;
+            }
+        }
 
         output.push(`__**${target}**__ \`(${value.length})\``);
 
         value.forEach(voter => {
-            output.push(bot.users.get(voter).username);
+            output.push(primary_guild.members.get(voter).displayName);
         });
 
         output.push('');

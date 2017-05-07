@@ -2,8 +2,6 @@ exports.run = function (bot, msg, args) {
     let primary_server = bot.guilds.get(bot.config.primary_server);
     let channels = bot.mafia.channels;
 
-    // TODO: Set majority command?
-
     if (channels.indexOf(msg.channel.id) > -1) {
         const error_response = `:negative_squared_cross_mark:  |  Please vote for a player by mentioning them, or use \`${bot.config.prefix}vote nolynch\` or \`${bot.config.prefix}unvote\``;
 
@@ -12,7 +10,7 @@ exports.run = function (bot, msg, args) {
             return;
         }
 
-        if (!msg.author.roles.has(bot.mafia.players.alive)) {
+        if (!msg.member.roles.has(bot.mafia.players.alive)) {
             msg.channel.send(':negative_squared_cross_mark:  |  You must be a player to vote.');
             return;
         }
@@ -21,8 +19,8 @@ exports.run = function (bot, msg, args) {
         let param = args.join(' ').toLowerCase();
         vote.voter = msg.author.id;
 
-        if (msg.mentions.users.size > 0) {
-            let target = msg.mentions.users.last();
+        if (msg.mentions.members.size > 0) {
+            let target = msg.mentions.members.last();
             vote.target = target.id;
 
             if (!target.roles.has(bot.mafia.players.alive)) {
@@ -52,13 +50,15 @@ exports.run = function (bot, msg, args) {
             }
 
             let lynched = bot.mafia.checkMajority();
-            if (lynched) {
+            if (lynched && lynched !== '0') {
                 let lynched_user = primary_server.members.get(lynched);
                 let alive_role = primary_server.roles.get(bot.mafia.players.alive);
 
                 if (lynched_user) {
-                    msg.channel.send(`:exclamation:  |  Majority has been reached and ${lynched_user.displayName} has been lynched.\nThe Night Phase will begin once a Mod posts the Night Start post.`);
+                    msg.channel.send(`\u200b\n:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**\n\n:full_moon:  **|**  *The Night Phase will begin once a Mod posts the Night Start post.*`);
                     msg.channel.overwritePermissions(alive_role, {'SEND_MESSAGES': false});
+                    bot.mafia.eod.day = false;
+                    bot.db.put('mafia.eod.day', bot.mafia.eod.day);
                 } else {
                     bot.logger.severe(`Majority reached, player ID: ${lynched} not found`);
                 }

@@ -13,9 +13,9 @@ exports.run = (bot, msg, args) => {
         let evaled = eval(code);
         if (typeof evaled !== 'string')
             evaled = require('util').inspect(evaled);
-        msg.channel.sendMessage(`\`\`\`${lang}\n${clean(evaled)}\n\`\`\``);
+        msg.channel.send(`\`\`\`${lang}\n${clean(evaled)}\n\`\`\``);
     } catch (err) {
-        msg.channel.sendMessage(`:x: Error! \`\`\`xl\n${clean(err)}\n\`\`\``).then(m => m.delete(15000));
+        msg.channel.send(`:x: Error! \`\`\`xl\n${clean(err)}\n\`\`\``).then(m => m.delete(15000));
     }
 };
 

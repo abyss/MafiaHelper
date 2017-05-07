@@ -13,6 +13,7 @@ const fse = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const XPDB = require('xpdb');
+const moment = require('moment');
 
 const stripIndents = require('common-tags').stripIndents;
 
@@ -53,6 +54,10 @@ bot.mafia.majority = 0;
 bot.mafia.players = {};
 bot.mafia.players.alive = '0';
 bot.mafia.players.dead = '0';
+bot.mafia.eod = {};
+bot.mafia.eod.time = '';
+bot.mafia.eod.channel = '';
+bot.mafia.eod.day = false;
 
 bot.mafia.buildVoteTable = () => {
     let vote_table = new Map();
@@ -97,7 +102,7 @@ bot.mafia.buildVoteOutput = () => {
     output.push(':ballot_box: **Current Vote Count** :ballot_box:\n');
 
     if (vote_table.size === 0) {
-        output.push('There are currently no votes.');
+        output.push('There are currently no votes.\n');
     }
 
     for (let [key, value] of vote_table) {
@@ -125,10 +130,34 @@ bot.mafia.buildVoteOutput = () => {
     }
 
     if (bot.mafia.majority > 0) {
-        output.push(`\n*Majority is ${bot.mafia.majority} votes.*`);
+        output.push(`*Majority is ${bot.mafia.majority} votes.*`);
     }
 
     return output.join('\n');
+};
+
+bot.mafia.eod.check = () => {
+    if (!bot.mafia.eod.day) {
+        return;
+    }
+
+    let primary_server = bot.guilds.get(bot.config.primary_server);
+    if (!(bot.mafia.eod.time && bot.mafia.eod.channel && primary_server.available)) {
+        return;
+    }
+
+    let eod_channel = primary_server.channels.get(bot.mafia.eod.channel);
+    if (!eod_channel) {
+        return;
+    }
+
+    if (bot.mafia.eod.time.isBefore()) {
+        let alive_role = primary_server.roles.get(bot.mafia.players.alive);
+        eod_channel.overwritePermissions(alive_role, {'SEND_MESSAGES': false});
+        eod_channel.send(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**\n\n:full_moon:  **|**  *The Night Phase will begin once a Mod posts the Night Start post.*');
+        bot.mafia.eod.day = false;
+        bot.db.put('mafia.eod.day', bot.mafia.eod.day);
+    }
 };
 
 if (!config.botToken || !/^[A-Za-z0-9\._\-]+$/.test(config.botToken)) {
@@ -187,6 +216,32 @@ bot.on('ready', () => {
     bot.db.get('mafia.majority').then(majority => {
         bot.mafia.majority = majority || 0;
     });
+
+    bot.db.get('mafia.eod.time').then(eod => {
+        if (eod) {
+            bot.mafia.eod.time = moment(eod);
+        } else {
+            bot.mafia.eod.time = null;
+        }
+    });
+
+    bot.db.get('mafia.eod.channel').then(channel => {
+        if (channel) {
+            bot.mafia.eod.channel = channel;
+        } else {
+            bot.mafia.eod.channel = '';
+        }
+    });
+
+    bot.db.get('mafia.eod.day').then(day => {
+        if (day) {
+            bot.mafia.eod.day = true;
+        } else {
+            bot.mafia.eod.day = false;
+        }
+    });
+
+    bot.setInterval(bot.mafia.eod.check, 60000);
 
     logger.info('Bot loaded');
     logger.info(`Use the following link to invite ${bot.user.username} to your server:\n` + chalk.blue(invite_template.replace('YOUR_CLIENT_ID', bot.user.id)));

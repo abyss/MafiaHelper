@@ -49,6 +49,10 @@ bot.mafia = {};
 bot.mafia.mods = [];
 bot.mafia.channels = [];
 bot.mafia.votes = [];
+bot.mafia.majority = 0;
+bot.mafia.players = {};
+bot.mafia.players.alive = '0';
+bot.mafia.players.dead = '0';
 
 bot.mafia.buildVoteTable = () => {
     let vote_table = new Map();
@@ -62,6 +66,22 @@ bot.mafia.buildVoteTable = () => {
     });
 
     return vote_table;
+};
+
+bot.mafia.checkMajority = () => {
+    if (bot.mafia.majority == 0) {
+        return '0'; // No lynches on 0 majority.
+    }
+
+    let vote_table = bot.mafia.buildVoteTable();
+
+    for (let [key, value] of vote_table) {
+        if (value.length >= bot.mafia.majority) {
+            return key;
+        }
+    }
+
+    return '0';
 };
 
 bot.mafia.buildVoteOutput = () => {
@@ -102,6 +122,10 @@ bot.mafia.buildVoteOutput = () => {
         });
 
         output.push('');
+    }
+
+    if (bot.mafia.majority > 0) {
+        output.push(`\n*Majority is ${bot.mafia.majority} votes.*`);
     }
 
     return output.join('\n');
@@ -150,6 +174,18 @@ bot.on('ready', () => {
 
     bot.db.get('mafia.votes').then(votes => {
         bot.mafia.votes = votes || [];
+    });
+
+    bot.db.get('mafia.players.alive').then(alive => {
+        bot.mafia.players.alive = alive || 0;
+    });
+
+    bot.db.get('mafia.players.dead').then(dead => {
+        bot.mafia.players.dead = dead || 0;
+    });
+
+    bot.db.get('mafia.majority').then(majority => {
+        bot.mafia.majority = majority || 0;
     });
 
     logger.info('Bot loaded');

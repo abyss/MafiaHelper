@@ -1,8 +1,8 @@
 const RichEmbed = require('discord.js').RichEmbed;
 
 exports.run = function (bot, msg, args) {
-    if (!msg.member.hasPermission('ADMINISTRATOR')) {
-        msg.channel.send(':negative_squared_cross_mark:  |  You are not an administrator.');
+    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.mods.indexOf(msg.author.id) < 0)) {
+        msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
 

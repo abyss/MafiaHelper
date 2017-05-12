@@ -4,6 +4,10 @@ exports.run = function (bot, msg, args) {
     let primary_server = bot.guilds.get(bot.config.primary_server);
     let alive_role = primary_server.roles.get(bot.mafia.players.alive);
 
+    if (!alive_role) {
+        throw 'Please set the alive players role.';
+    }
+
     msg.channel.overwritePermissions(alive_role, {'SEND_MESSAGES': true});
 
     let hours;
@@ -35,7 +39,17 @@ exports.run = function (bot, msg, args) {
 
     bot.db.put('mafia.majority', bot.mafia.majority);
 
-    msg.channel.send(':sunny:  **|  The Day has begun!**');
+    let postfix = '';
+
+    if (hours !== 24) {
+        let plurality = '';
+        if (hours > 1) {
+            plurality = 's';
+        }
+        postfix = `**It will be ${hours} hour${plurality} long.**`;
+    }
+
+    msg.channel.send(`:sunny:  **|  The Day has begun!** ${postfix}`);
 };
 
 exports.info = {

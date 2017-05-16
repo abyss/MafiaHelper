@@ -1,20 +1,21 @@
 exports.run = function (bot, msg, args) {
-    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.mods.indexOf(msg.author.id) < 0)) {
+    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.data.mods.indexOf(msg.author.id) < 0)) {
         msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
 
     if (args.length < 1) {
-        msg.channel.send(`:ballot_box:  |  Current vote needed to lynch: **${bot.mafia.majority}**`);
+        msg.channel.send(`:ballot_box:  |  Current vote needed to lynch: **${bot.mafia.data.majority}**`);
         return;
     }
 
     let new_majority = parseInt(args[0], 10);
     if (!isNaN(new_majority)) {
-        bot.mafia.majority = new_majority;
-        bot.db.put('mafia.majority', bot.mafia.majority).then(() => {
-            msg.channel.send(`:white_check_mark:  |  New majority set at **${bot.mafia.majority}**`);
-        });
+        bot.mafia.data.majority = new_majority;
+
+        bot.mafia.saveDB();
+
+        msg.channel.send(`:white_check_mark:  |  New majority set at **${bot.mafia.data.majority}**`);
     } else {
         msg.channel.send(':negative_squared_cross_mark:  |  You must provide a number.');
     }

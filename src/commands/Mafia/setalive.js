@@ -1,17 +1,20 @@
 const RichEmbed = require('discord.js').RichEmbed;
 
 exports.run = function (bot, msg, args) {
-    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.mods.indexOf(msg.author.id) < 0)) {
+    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.data.mods.indexOf(msg.author.id) < 0)) {
         msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
+    if (!bot.mafia.data.players) {
+        bot.mafia.data.players = {};
+    }
 
-    if (typeof bot.mafia.players.alive === 'undefined') {
-        bot.mafia.players.alive = '0';
+    if (typeof bot.mafia.data.players.alive === 'undefined') {
+        bot.mafia.data.players.alive = '0';
     }
 
     if (args.length < 1) {
-        let alive_role = bot.mafia.players.alive;
+        let alive_role = bot.mafia.data.players.alive;
         let role_output;
 
         if (alive_role !== '0') {
@@ -27,7 +30,7 @@ exports.run = function (bot, msg, args) {
             .setTitle('Mafia Players:')
             .setDescription(role_output);
 
-        msg.channel.sendEmbed(output);
+        msg.channel.send('', {embed: output});
         return;
     }
 
@@ -38,14 +41,10 @@ exports.run = function (bot, msg, args) {
 
     let role = msg.mentions.roles.last();
 
-    msg.channel.send(':arrows_counterclockwise: | Adding...').then(m => {
-        bot.db.put('mafia.players.alive', role.id).then(() => {
-            m.edit(`:white_check_mark:  |  **${role.name}** is now the players role.`);
-            //Update Cache
-            bot.mafia.players.alive = role.id;
-        });
+    bot.mafia.data.players.alive = role.id;
 
-    });
+    bot.mafia.saveDB();
+    msg.channel.send(`:white_check_mark:  |  **${role.name}** is now the players role.`);
 };
 
 exports.info = {

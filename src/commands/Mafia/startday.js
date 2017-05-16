@@ -1,8 +1,10 @@
 const moment = require('moment');
 
 exports.run = function (bot, msg, args) {
+    if (!bot.mafia.data.players) throw 'Please set the alive players role.';
+
     let primary_server = bot.guilds.get(bot.config.primary_server);
-    let alive_role = primary_server.roles.get(bot.mafia.players.alive);
+    let alive_role = primary_server.roles.get(bot.mafia.data.players.alive);
 
     if (!alive_role) {
         throw 'Please set the alive players role.';
@@ -22,28 +24,21 @@ exports.run = function (bot, msg, args) {
     }
 
     let day_end = moment().add(hours, 'hours');
-    bot.mafia.eod.time = day_end;
-    bot.db.put('mafia.eod.time', bot.mafia.eod.time.toJSON());
-
-    bot.mafia.eod.day = true;
-    bot.db.put('mafia.eod.day', bot.mafia.eod.day);
-
-    bot.mafia.eod.channel = msg.channel.id;
-    bot.db.put('mafia.eod.channel', bot.mafia.eod.channel);
-
-    bot.mafia.votes = [];
-    bot.db.put('mafia.votes', bot.mafia.votes);
+    bot.mafia.data.eod.time = day_end;
+    bot.mafia.data.eod.day = true;
+    bot.mafia.data.eod.channel = msg.channel.id;
+    bot.mafia.data.votes = [];
 
     let num_players = alive_role.members.size;
-    bot.mafia.majority = Math.floor((num_players+2)/2);
+    bot.mafia.data.majority = Math.floor((num_players+2)/2);
 
-    bot.db.put('mafia.majority', bot.mafia.majority);
+    bot.mafia.saveDB();
 
     let postfix = '';
 
     if (hours !== 24) {
         let plurality = '';
-        if (hours > 1) {
+        if (hours !== 1) {
             plurality = 's';
         }
         postfix = `**It will be ${hours} hour${plurality} long.**`;

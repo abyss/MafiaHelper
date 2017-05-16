@@ -4,11 +4,9 @@ exports.run = function (bot, msg) {
         return;
     }
 
-    bot.mafia.votes = [];
+    bot.mafia.data.votes = [];
 
-    bot.db.put('mafia.votes', bot.mafia.votes).then(() => {
-        msg.channel.send('Votes cleared.');
-    });
+    bot.mafia.saveDB();
 };
 
 exports.info = {

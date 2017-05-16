@@ -52,13 +52,13 @@ exports.run = (bot, msg, args) => {
         }
 
         messages.map(m => m.fields).forEach(fields => {
-            msg.channel.sendEmbed(
+            msg.channel.send('', {embed:
                 bot.utils.embed(title, '_This message will self-destruct in 30 seconds._', fields)
-            ).then(m => m.delete(30000));
+            }).then(m => m.delete(30000));
         });
     } else {
         var categories = bot.commands.categories().sort();
-        msg.channel.sendEmbed(
+        msg.channel.send('', {embed:
             bot.utils.embed(title, stripIndents`
             **Available categories:**
             ${categories.map(c => `- __${c}__`).join('\n')}
@@ -67,7 +67,7 @@ exports.run = (bot, msg, args) => {
             Do \`${bot.config.prefix}help category <name>\` for a list of commands in a specific category.
             Do \`${bot.config.prefix}help all\` for a list of every command available in this bot.
             Do \`${bot.config.prefix}help <command>\` for help with a specific command.`)
-        ).then(m => m.delete(10000));
+        }).then(m => m.delete(10000));
     }
 };
 

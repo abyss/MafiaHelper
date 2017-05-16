@@ -26,7 +26,7 @@ exports.run = function (bot, msg, args) {
             .setTitle('Channels to Monitor:')
             .setDescription(channel_mentions.join('\n'));
 
-        msg.channel.sendEmbed(output);
+        msg.channel.send('', {embed: output});
         return;
     }
 

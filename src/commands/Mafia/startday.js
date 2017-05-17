@@ -23,28 +23,10 @@ exports.run = function (bot, msg, args) {
         hours = 24;
     }
 
-    let day_end = moment().add(hours, 'hours');
-    bot.mafia.data.eod.time = day_end;
-    bot.mafia.data.eod.day = true;
     bot.mafia.data.eod.channel = msg.channel.id;
-    bot.mafia.data.votes = [];
+    bot.mafia.startDay(hours);
 
-    let num_players = alive_role.members.size;
-    bot.mafia.data.majority = Math.floor((num_players+2)/2);
-
-    bot.mafia.saveDB();
-
-    let postfix = '';
-
-    if (hours !== 24) {
-        let plurality = '';
-        if (hours !== 1) {
-            plurality = 's';
-        }
-        postfix = `**It will be ${hours} hour${plurality} long.**`;
-    }
-
-    msg.channel.send(`:sunny:  **|  The Day has begun!** ${postfix}`);
+    msg.channel.send(':sunny:  **|  The Day has begun!**');
 };
 
 exports.info = {

@@ -1,6 +1,8 @@
 exports.run = function (bot, msg) {
-    if (bot.mafia.data.eod.day) {
-        msg.channel.send(`:white_sun_cloud:  **|  The Day Phase will end ${bot.mafia.data.eod.time.fromNow()}.**`);
+    let toEOD = bot.mafia.timeToEOD();
+
+    if (toEOD) {
+        msg.channel.send(`:white_sun_cloud:  **|  The Day Phase will end in ${toEOD}.**`);
     } else {
         msg.channel.send(':x:  **|  There is no Day Phase currently.**');
     }

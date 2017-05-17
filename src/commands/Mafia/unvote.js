@@ -1,5 +1,7 @@
 exports.run = function (bot, msg) {
-    let channels = bot.mafia.channels;
+    let channels = bot.mafia.data.channels;
+
+    if (!channels) return;
 
     if (channels.indexOf(msg.channel.id) > -1) {
         if (typeof bot.mafia.data.votes === 'undefined') {

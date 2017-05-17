@@ -1,5 +1,9 @@
 const moment = require('moment');
 const _ = require('lodash');
+const PHASE_DAWN = 1;
+const PHASE_DAY = 2;
+const PHASE_DUSK = 3;
+const PHASE_NIGHT = 4;
 
 class MafiaGame {
     constructor(bot) {
@@ -8,7 +12,32 @@ class MafiaGame {
         this.loadDB();
     }
 
+/* New Data Structure:
+{
+    "mods": [],
+
+    "primary": {
+        "role": "0",
+        "channel": "0",
+        "guild": "0"
+    },
+
+    "mafia": {
+        "role": "0",
+        "channel": "0",
+        "guild": "0"
+    },
+
+    "phase": 0, // 1: Dawn, 2: Day, 3: Dusk, 4: Night
+    "timer": "moment()",
+
+    "votes": [],
+    "majority": 0
+}
+*/
+
     loadDB() {
+        // TODO: New Data Structure
         this.bot.db.get('mafia').then(mafia_data => {
             this.data = mafia_data || {};
 
@@ -66,6 +95,7 @@ class MafiaGame {
     }
 
     buildVoteOutput() {
+        // TODO: New Data Structure
         let vote_table = this.buildVoteTable();
         let output = [];
         let primary_guild = this.bot.guilds.get(this.bot.config.primary_server);
@@ -113,6 +143,7 @@ class MafiaGame {
     }
 
     startDay(hours) {
+        // TODO: New Data Structure
         let day_end = moment().add(hours, 'hours');
         let primary_server = this.bot.guilds.get(this.bot.config.primary_server);
         let alive_role = primary_server.roles.get(this.data.players.alive);
@@ -127,7 +158,92 @@ class MafiaGame {
         this.saveDB();
     }
 
+    getGuild() {
+        let guildID = _.get(this.data, 'primary.guild', null);
+
+        if (!guildID) {
+            return null;
+        }
+
+        return this.bot.guilds.get(guildID);
+    }
+
+    getMafiaGuild() {
+        let guildID = _.get(this.data, 'mafia.guild', null);
+
+        if (!guildID) {
+            return null;
+        }
+
+        return this.bot.guilds.get(guildID);
+    }
+
+    getChannel() {
+        let channelID = _.get(this.data, 'primary.channel', null);
+
+        if (!channelID) {
+            return null;
+        }
+
+        return this.bot.channels.get(channelID);
+    }
+
+    getMafiaChannel() {
+        let channelID = _.get(this.data, 'mafia.channel', null);
+
+        if (!channelID) {
+            return null;
+        }
+
+        return this.bot.channels.get(channelID);
+    }
+
+    setPhase(phase) {
+        _.set(this.data, 'phase', phase);
+        this.saveDB();
+    }
+
+    phaseTimer() {
+        if (!this.loaded) { return; }
+
+        let phase = _.get(this.data, 'phase', 0);
+        let timer = _.get(this.data, 'timer', null);
+
+        if (!(timer && phase)) { return; }
+
+        if (phase === PHASE_DAWN || phase === PHASE_DUSK) { return; }
+
+        if (timer.isBefore()) {
+            let channel;
+            let role;
+
+            if (phase === PHASE_DAY) {
+                channel = this.getChannel();
+                role = _.get(this.data, 'primary.role', null);
+            } else if (phase === PHASE_NIGHT) {
+                channel = this.getMafiaChannel();
+                role = _.get(this.data, 'mafia.role', null);
+            }
+
+            if (!channel) { return; }
+
+            let guild = channel.guild;
+
+            if (!(_.get(guild, 'available', false) && role)) { return; }
+            channel.overwritePermissions(role, {'SEND_MESSAGES': false});
+
+            if (phase === PHASE_DAY) {
+                channel.send(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**\n\n:full_moon:  **|**  *The Night Phase will begin once a Mod posts the Night Start post.*');
+                this.setPhase(PHASE_DUSK);
+            } else if (phase === PHASE_NIGHT) {
+                channel.send(':exclamation:  **| The Night Phase has ended. The Day Phase will begin once a Mod posts the Day Start post.**');
+                this.setPhase(PHASE_DAWN);
+            }
+        }
+    }
+
     eod_check() {
+        // New Data Structure --> phaseTimer()
         if (!this.loaded) {
             return;
         }
@@ -156,6 +272,7 @@ class MafiaGame {
     }
 
     messageUpdate(oldMsg, newMsg) {
+        // TODO: New Data Structure
         let mods = this.data.mods;
         let channels = this.data.channels;
         if (!channels) return;
@@ -175,6 +292,7 @@ class MafiaGame {
     }
 
     messageDelete(msg) {
+        // TODO: New Data Structure
         let mods = this.data.mods;
         let channels = this.data.channels;
         if (!channels) return;
@@ -230,6 +348,7 @@ class MafiaGame {
     }
 
     timeToEOD() {
+        // TODO: New Data Structure
         let eod = _.get(this.data, 'eod.time', null);
 
         if (!moment.isMoment(eod)) {

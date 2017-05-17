@@ -43,6 +43,8 @@ exports.run = function (bot, msg, args) {
     let role = msg.mentions.roles.last();
 
     bot.mafia.data.players.dead = role.id;
+
+    bot.mafia.saveDB();
     msg.channel.send(`:white_check_mark:  |  **${role.name}** is now the dead players role.`);
 };
 

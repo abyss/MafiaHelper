@@ -1,4 +1,5 @@
 const moment = require('moment');
+const _ = require('lodash');
 
 class MafiaGame {
     constructor(bot) {
@@ -11,27 +12,23 @@ class MafiaGame {
         this.bot.db.get('mafia').then(mafia_data => {
             this.data = mafia_data || {};
 
-            if (this.data.eod) {
-                if (this.data.eod.time) {
-                    this.data.eod.time = moment(this.data.eod.time);
-                } else {
-                    this.data.eod.time = null;
-                }
+            let time = _.get(this.data, 'eod.time', null);
+
+            if (time) {
+                _.set(this.data, 'eod.time', moment(this.data.eod.time));
             } else {
-                this.data.eod = {};
-                this.data.eod.time = null;
+                _.set(this.data, 'eod.time', null);
             }
 
             this.loaded = true;
-
         });
     }
 
     saveDB() {
-        // TODO: NO SAVING AHHHHHHHH!
-
-        // NOTE: bot.mafia.data.eod.time.toJSON()
-        return;
+        this.bot.db.put('mafia', this.data).catch(err => {
+            this.bot.logger.severe('Cannot saveDB:');
+            this.bot.logger.severe(err);
+        });
     }
 
     buildVoteTable() {

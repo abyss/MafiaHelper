@@ -21,7 +21,7 @@ exports.run = function (bot, msg, args) {
             .setTitle('Mafia Mods:')
             .setDescription(mod_mentions.join('\n'));
 
-        msg.channel.sendEmbed(output);
+        msg.channel.send('', {embed: output});
         return;
     }
 

@@ -1,10 +1,14 @@
 // to add options/change emojis: simply add/change this
 let emojis = {
     peace:          {name: '☮',    text: 'You slept peacefully.\n'},
-    mafia_kill:     {name: '💀',   text: 'You got killed by the Mafia!\n'},
-    sk_kill:        {name: '🔫',   text: 'You got killed by the Serial Killer!\n'},
-    roleblocked:    {name: '🚫',   text: 'You got rolebocked!\n'},
-    controlled:     {name: '💫',   text: 'You got controlled by the Witch!\n'},
+    roleblocked:    {name: '🚫',   text: 'You got rolebocked last night.\n'},
+    jailed:         {name: '🏰',   text: 'You were jailed last night.\n'},
+    controlled:     {name: '💫',   text: 'You got controlled by a Witch last night.\n'},
+    mafia_kill:     {name: '💀',   text: 'You got killed by the Mafia last night.\n'},
+    sk_kill:        {name: '🔫',   text: 'You got killed by the Serial Killer last night\n'},
+    immune:         {name: '👎',   text: 'Your target was immune to your attack.\n'},
+    bodyguarded:    {name: '💪',   text: 'Your target was protected by the Bodyguard and you were killed by them' +
+                                         ' last night.\n'},
     custom:         {name: '📧',   text: 'Click this to add a custom message.\n'},
     reset:          {name: '♻',    text: 'Reset the content of this message\n\n'},
     send:           {name: '✅',    text: '**You have 30 minutes to use this menu then it will time out!\n' +
@@ -30,7 +34,7 @@ let emojis = {
                 yield this[key];
     }
 };
-let msgs = [], collectors = [];
+let msgs = [], collectors = [], killed_people = [], members_with_role = [];
 
 exports.run = function (bot, msg) {
     // The default is 10 open listeners... I need one for each person + one for sending/canceling | maybe reset later?
@@ -40,10 +44,10 @@ exports.run = function (bot, msg) {
         msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
-    let membersWithRole = msg.guild.roles.get(bot.mafia.data.players.alive).members.array();
+    members_with_role = msg.guild.roles.get(bot.mafia.data.players.alive).members.array();
     // iterate over all alive players and send one message per player to the(secret) channel with emoji-reactions as menu
     msg.channel.send('__**----------- Night Message Menu -----------**__');
-    for (let member of membersWithRole) {
+    for (let member of members_with_role) {
         msg.channel.send('**Send ' + member + ' following night message:**\n')
            .then(tmp_msg => {
                msgs.push(tmp_msg);
@@ -71,7 +75,7 @@ exports.run = function (bot, msg) {
            tmp_msg.react(emojis.send.name).then(tmp_msg.react(emojis.abort.name));
            let collector = tmp_msg.createReactionCollector((_, user) => user.id === msg.author.id, { time: 1800000 });
            collectors.push(collector);
-           collector.on('collect', reaction => _reactionEventMessageSendCancel(reaction));
+           collector.on('collect', reaction => _reactionEventMessageSendCancel(reaction, bot));
            collector.on('end', reaction => {
                tmp_msg.clearReactions();
                if (reaction.message !== undefined && reaction.message.reactions.array().length === 0)
@@ -112,7 +116,7 @@ function _reactionEventMessageGroup(reaction, own_msg) {
 }
 
 // fires every time an reaction (emoji) form command initiator is added to the last message (legende + send/cancel)
-function _reactionEventMessageSendCancel(reaction) {
+function _reactionEventMessageSendCancel(reaction, bot) {
     let emo_name = reaction.emoji.name;
     if (emo_name === emojis.send.name) {
         let remaining_msgs = [];
@@ -124,6 +128,8 @@ function _reactionEventMessageSendCancel(reaction) {
                 continue;
             }
             let recipient = tmp_msg.mentions.users.array()[0];
+            if (tmp_msg_content_array.join(' ').toLowerCase().includes('you got killed') || tmp_msg_content_array.join(' ').includes('you were killed'))
+                killed_people.push(recipient);
             recipient.send(tmp_msg_content_array.join('\n'))
                  .then( send_msg => {
                      tmp_msg.edit('**Message successful sent to: ' + recipient + ':**\n' + send_msg.content + '\n')
@@ -135,8 +141,15 @@ function _reactionEventMessageSendCancel(reaction) {
         }
         msgs = remaining_msgs;
     }
-    if (msgs.length === 0 || emo_name === emojis.abort.name)
+    if (msgs.length === 0 || emo_name === emojis.abort.name) {
         collectors.map(col => col.stop());
+        for (let user of killed_people)
+            for (let member of members_with_role)
+                if (member.user === user) {
+                    member.removeRole(bot.mafia.data.players.alive);
+                    member.addRole(bot.mafia.data.players.dead);
+                }
+    }
 }
 
 exports.info = {

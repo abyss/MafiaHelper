@@ -112,6 +112,21 @@ class MafiaGame {
         return output.join('\n');
     }
 
+    startDay(hours) {
+        let day_end = moment().add(hours, 'hours');
+        let primary_server = this.bot.guilds.get(this.bot.config.primary_server);
+        let alive_role = primary_server.roles.get(this.data.players.alive);
+
+        _.set(this.data, 'eod.time', day_end);
+        _.set(this.data, 'eod.day', true);
+        _.set(this.data, 'votes', []);
+
+        let num_players = alive_role.members.size;
+        this.data.majority = Math.floor((num_players+2)/2);
+
+        this.saveDB();
+    }
+
     eod_check() {
         if (!this.loaded) {
             return;
@@ -173,6 +188,55 @@ class MafiaGame {
                 mod.send(`\`\`\`${msg.content}\`\`\``);
             });
         }
+    }
+
+    beautifyToMoment(time) {
+        let categories = ['day', 'hour', 'minute', 'second'];
+        let ret = [];
+
+        let now = moment();
+
+        if (!moment.isMoment(time)) {
+            throw 'Must pass a moment';
+        }
+
+        let diff = moment.duration(time.diff(now));
+
+        for (let i = 0; i < categories.length; i += 1) {
+            let catName = categories[i];
+            let catTime = diff.get(catName);
+
+            if (catTime === 0) {
+                continue;
+            }
+
+            if (catTime !== 1) {
+                catName += 's';
+            }
+
+            ret.push(`${catTime} ${catName}`);
+        }
+
+        if (ret.length === 1) {
+            return ret[0];
+        } else if (ret.length === 2) {
+            return `${ret[0]} and ${ret[1]}`;
+        }
+
+        let last = ret[ret.length - 1];
+        ret[ret.length - 1] = `and ${last}`;
+
+        return ret.join(', ');
+    }
+
+    timeToEOD() {
+        let eod = _.get(this.data, 'eod.time', null);
+
+        if (!moment.isMoment(eod)) {
+            return '';
+        }
+
+        return this.beautifyToMoment(eod);
     }
 }
 

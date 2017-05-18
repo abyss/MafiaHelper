@@ -1,82 +1,90 @@
-const _    = require('lodash');
-// to add options/change emojis: simply add/change this
-let emojis = {
-    peace      : {name: '☮',  text: 'You slept peacefully.\n'},
-    roleblocked: {name: '🚫', text: 'You got rolebocked last night.\n'},
-    jailed     : {name: '🏰', text: 'You were jailed last night.\n'},
-    controlled : {name: '💫', text: 'You got controlled by a Witch last night.\n'},
-    mafia_kill : {name: '💀', text: 'You got killed by the Mafia last night.\n'},
-    sk_kill    : {name: '🔫', text: 'You got killed by the Serial Killer last night\n'},
-    immune     : {name: '👎', text: 'Your target was immune to your attack.\n'},
-    bodyguarded: {name: '💪', text: 'Your target was protected by the Bodyguard and you were killed by them last night.\n'},
-    custom     : {name: '📧', text: 'Click this to add a custom message.\n'},
-    reset      : {name: '♻',  text: 'Reset the content of this message\n\n'},
-    send       : {name: '✅',  text: '**You have 30 minutes to use this menu then it will time out!\n' +
-                                    'If you are satisfied with the messages click the  ✅ below this message to send all (not empty) messages out.\n' +
-                         'To cancel click the 🇽**'},
-    abort      : {name: '🇽', text: ''},
+const _ = require('lodash');
+// to add options/change gui: simply add/change this
+let gui = {
+    reset      : {emoji: '♻',  text: 'Reset the content of this message\n'},
+    peace      : {emoji: '☮',  text: 'You slept peacefully.\n'},
+    custom     : {emoji: '📧', text: 'Click this to add a custom message.\n'},
+    roleblocked: {emoji: '🚫', text: 'You got rolebocked last night.\n'},
+    jailed     : {emoji: '🏰', text: 'You were jailed last night.\n'},
+    controlled : {emoji: '💫', text: 'You got controlled by a Witch last night.\n'},
+    mafia_kill : {emoji: '💀', text: 'You got killed by the Mafia last night.\n'},
+    sk_kill    : {emoji: '🔫', text: 'You got killed by the Serial Killer last night\n'},
+    immune     : {emoji: '👎', text: 'Your target was immune to your attack.\n'},
+    bodyguarded: {emoji: '💪', text: 'Your target was protected by the Bodyguard and you were killed by them last night.\n'},
+    send       : {emoji: '✅',  text: '\n**You have 30 minutes to use this menu then it will time out!\n' +
+                                     'If you are satisfied with the messages click the  ✅ below this message to send all (not empty) messages out.\n' +
+                                     'To cancel click the 🇽**'},
+    abort      : {emoji: '🇽', text: ''},
 
     // get the correct text to an emoji
     text_for_emote: function (emoji_name) {
-        return Array.from(emojis).find(emo => {if (emo.name === emoji_name) return emo;}).text;
+        return Array.from(gui).find(elem => {if (elem.emoji === emoji_name) return elem;}).text;
     },
 
     // construct text for displaying a legend of which emoji does what
     legend_text: function () {
-        return '\n\n\n**Legend:**\n' + Array.from(emojis).map(emo => {return emo.name + ' : ' + emo.text;}).join('') + this.send.text;
-    }, // Iterator ignores the 'send' emote keep that in mind
+        return '\n\n\n**Legend:**\n' + Array.from(gui).map(elem => {return elem.emoji + ' : ' + elem.text;}).join('') + this.send.text;
+    },
 
+    // Iterator (ignores the 'send' emote keep that in mind)
     [Symbol.iterator]: function*() {
         for (let key in this) {
             if (this.hasOwnProperty(key) && typeof(this[key]) !== 'function' && key !== 'send' && key !== 'abort') yield this[key];
         }
     }
 };
-let msgs   = [], collectors = [], killed_people = [], alive_players = [], current_state;
+let msgs, alive_players;
 
 exports.run = function (bot, msg) {
-    // The default is 10 open listeners... I need one for each person + one for sending/canceling | maybe reset later?
-    process.setMaxListeners(0);
-    msgs = [], collectors = [], killed_people = [], current_state = 'editing_messages';
-    // admin permission check
     if (!msg.member.hasPermission('ADMINISTRATOR') && !bot.mafia.isMod(msg.author.id)) {
         msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
+
+    // The node.js default is 10 open listeners... I need one for each person + one for sending/canceling will be reset to 10 again at the end
+    process.setMaxListeners(0);
+
+    msgs = [];
     alive_players = bot.mafia.getRole().members.array();
-    // iterate over all alive players and send one message per player to the(secret) channel with emoji-reactions as menu
+
+    // iterate over all alive players and send one message per player to the (hopefully secret) channel, with emoji-reactions as menu
     msg.channel.send('__**----------- Night Message Menu -----------**__');
     for (let member of alive_players) {
-        msg.channel.send('**Send ' + member + ' following night message:**\n')
+        msg.channel.send('**Send ' + member + ' following night message:**\nYou slept peacefully.')
            .then(tmp_msg => {
-               msgs.push(tmp_msg.id);
-               // reaction collector to log the emoji reactions
-               let collector = tmp_msg.createReactionCollector((_, user) => user.id === msg.author.id, {time: 1800000});
-               // save collector object to close it later
-               collectors.push(collector);
-               // create event - triggers every time an emoji get added
-               collector.on('collect', reaction => _reactionEventMessageGroup(reaction, msg));
+               // create reaction collector to log the emoji reactions TODO: Make an utilityfunction to create menus with collectors
+               let collector = tmp_msg.createReactionCollector((_, user) => [msg.author.id].concat(bot.mafia.getModsID()).indexOf(user.id) > -1, {time: 1800000});
+
+               // save sent message id to edit this message later - to save the whole object wont work b/c conten updates won't affect it (necessarily)
+               // save the collector to be able to stop it later - this way it can be easily determend to which message each collector belongs
+               msgs.push([tmp_msg.id, collector]);
+               // create events - 'collect' triggers every time an emoji get added 'end' when collector stops
+               collector.on('collect', reaction => _reactionEventMessageGroup(reaction, msg, bot));
+               // clear reactions when the collector stops
                collector.on('end', () => { tmp_msg.clearReactions(); });
-               // get emojis as array and then everytime one got succesfully posted post the next one and stop
-               // this collector once finished
-               let tmp_emojis = Array.from(emojis);
+
+               // get gui as array and then everytime one got succesfully posted, post the next one and stop this collector once all are done
+               let gui_elems = Array.from(gui);
                let collector2 = tmp_msg.createReactionCollector((_, user) => user.id === bot.user.id, {time: 100000});
                collector2.on('collect', reaction => {
-                   if (reaction.message.reactions.array().length < tmp_emojis.length) {
-                       tmp_msg.react(tmp_emojis[reaction.message.reactions.array().length].name);
+                   if (reaction.message.reactions.array().length < gui_elems.length) {
+                       tmp_msg.react(gui_elems[reaction.message.reactions.array().length].emoji).catch(console.log);
                    }
                    else {
                        collector2.stop();
                    }
                });
-               tmp_msg.react(tmp_emojis[0].name); // initial reaction to start it off
+               tmp_msg.react(gui_elems[0].emoji).catch(console.log); // initial reaction to start the chain reaction
            });
     }
-    msg.channel.send(emojis.legend_text())  // send legend & send button + create reaction collector as above
+
+    // send legend & send + cancel button & create reaction collector + store it for later use as above
+    msg.channel.send(gui.legend_text())
        .then(tmp_msg => {
-           tmp_msg.react(emojis.send.name).then(tmp_msg.react(emojis.abort.name));
-           let collector = tmp_msg.createReactionCollector((_, user) => user.id === msg.author.id, {time: 1800000});
-           collectors.push(collector);
+           // this somehow fails to make them appear in always the same order...
+           tmp_msg.react(gui.send.emoji).then(tmp_msg.react(gui.abort.emoji)).catch(console.log);
+           let collector = tmp_msg.createReactionCollector((_, user) => [msg.author.id].concat(bot.mafia.getModsID()).indexOf(user.id) > -1, {time: 1800000});
+           msgs.push(['send/cancel', collector]);
            collector.on('collect', reaction => _reactionEventMessageSendCancel(reaction, bot));
            collector.on('end', reaction => {
                tmp_msg.clearReactions();
@@ -90,115 +98,89 @@ exports.run = function (bot, msg) {
        });
 };
 
-// fires every time a reaction (emoji) from the command initiator is added to one of the messages
-function _reactionEventMessageGroup(reaction, own_msg) {
+// fires every time a reaction (emoji) from the command-initiator is added to one of the messages
+function _reactionEventMessageGroup(reaction, own_msg, bot) {
     let msg = reaction.message;
-    if (reaction.emoji.name === emojis.reset.name) {
+    if (reaction.emoji.name === gui.reset.emoji) {
         msg.edit(msg.content.split('\n')[0]);
-        // This can be used to reset the emojis after pressing the reset emoji but it is more irritating than usefull imo...
+        // This can be used to reset the gui after pressing the reset emoji but it is more irritating than usefull imo...
         // for (let tmp_user of reaction.users.array()) {
         //     if (tmp_user === msg.author) continue;
         //     for (let tmp_reaction of msg.reactions.array())
         //         tmp_reaction.remove(tmp_user);
         // }
         return;
-    } // Handling of custom messages - only accepts messages from the one who initiated the command
-    if (reaction.emoji.name === emojis.custom.name) {
+    }
+    // Handling of custom messages - only accepts messages from the one who initiated the command
+    if (reaction.emoji.name === gui.custom.emoji) {
         msg.channel.send('\n\n**Enter your custom message for **' + msg.mentions.users.array()[0])
            .then(send_msg => {
-               msg.channel.awaitMessages(m => m.author.id === own_msg.author.id, {max: 1})
+               // waits for the next message (timeout 5 min) of the author and add the content of it to this persons 'to send messages' list
+               msg.channel.awaitMessages(m => [own_msg.author.id].concat(bot.mafia.getModsID()).indexOf(m.author.id) > -1, {max: 1, time: 300000})
                   .then(collected => {
                       msg.edit(msg.content + '\n' + collected.array()[0]);
                       send_msg.delete();
-                      collected.array()[0].delete();
+                      collected.array()[0].delete(); // dont know what permissions the bot will have so... maybe just comment that out
                   });
            });
         return;
-    } // catching other emojis here could be good thing to do...
-    msg.edit(msg.content + '\n' + emojis.text_for_emote(reaction.emoji.name));
+    }
+    let content_addition = gui.text_for_emote(reaction.emoji.name);
+    if (!content_addition) return;
+    msg.edit(msg.content + '\n' + content_addition);
 }
 
-// fires every time an reaction (emoji) form command initiator is added to the last message (legende + send/cancel)
+// fires every time an reaction (emoji) form command-initiator is added to the last message (legende + send/cancel)
 function _reactionEventMessageSendCancel(reaction, bot) {
     let emo_name = reaction.emoji.name;
-    if ([emojis.abort.name, emojis.send.name].indexOf(emo_name) < 0) return;
+    if ([gui.abort.emoji, gui.send.emoji].indexOf(emo_name) < 0) return;
 
-    // swich-casing over all the different states that can occur when hitting 'send' or 'cancel'
-    if (current_state === 'editing_messages') {
-        if (emo_name === emojis.abort.name) {
-            collectors.map(col => col.stop());
-            return;
-        }
-        if (emo_name === emojis.send.name) {
-            let remaining_msgs = [];
-            for (let index in msgs) {
-                reaction.message.channel.fetchMessage(msgs[index]).then(tmp_msg => {
-                    let tmp_msg_content_array = tmp_msg.content.split('\n').splice(1), continue_function = true;
-                    if (tmp_msg_content_array.length === 0) {
-                        remaining_msgs.push(tmp_msg.id); // it is not possible to just .slice() the msgs because async sending...
-                        continue_function = false;
-                    }
-                    if (continue_function) {
-                        let recipient = tmp_msg.mentions.users.array()[0];
-                        if (_.filter(['you got killed', 'killed you', 'you were killed', 'you died'], e => {
-                            return tmp_msg_content_array.join(' ').toLowerCase().includes(e);
-                        }).length > 0) {
-                            killed_people.push(recipient);
-                        }
-                        recipient.send(tmp_msg_content_array.join('\n'))
-                                 .then(send_msg => {
-                                     tmp_msg.edit('**Message successful sent to: ' + recipient + ':**\n' + send_msg.content + '\n')
-                                            .then(() => {
-                                                collectors[index].stop();
-                                            });
-                                 });
-                    }
-                });
+    if (emo_name === gui.abort.emoji) {
+        msgs.map(pair => pair[1].stop()); // stops all collectors and thus removes all emojis from all messages
+        return;
+    }
+
+    if (emo_name === gui.send.emoji) {
+        let remaining_msgs = [];
+        for (let pair of msgs) {
+            // do not handle the send/cancel message here
+            if (pair[0] === 'send/cancel') {
+                remaining_msgs.push(pair);
+                continue;
             }
-            msgs = remaining_msgs;
-        }
-        if (msgs.length === 0) {
-            current_state = 'asked_roles';
-            reaction.message.edit('**Should the roles of the people that died be updated now?** *(-alive, +dead)\n(Shows a list first)*');
-        }
-    }
-    else if (current_state === 'asked_roles' && emo_name === emojis.send.name) {
-        current_state = 'confirm_role_changes';
-        reaction.message.edit('**Today died: ' + killed_people.join(' and ') + '\nCorrect? (If not no roles will be' + ' changed)**');
-    }
-    else if ((current_state === 'asked_roles' && emo_name === emojis.abort.name) || current_state === 'confirm_role_changes') {
-        current_state = 'asked_end_night';
-        reaction.message.edit('**End the night now?**\n*24h by default or 2h per additional emoji you react with to' + ' this message');
-        if (emo_name === emojis.send.name) {
-            for (let user of killed_people) {
-                for (let member of alive_players) {
-                    if (member.user === user) {
-                        member.removeRole(bot.mafia.getRoleID()).catch(console.error);
-                        member.addRole(bot.mafia.data.players.dead).catch(console.error);
-                    }
+            // need to get the message again... content could have canged...
+            reaction.message.channel.fetchMessage(pair[0]).then(tmp_msg => {
+                let tmp_msg_content_array = tmp_msg.content.split('\n').splice(1);
+                let continue_function = true;
+                if (tmp_msg_content_array.length === 0) {
+                    remaining_msgs.push(pair);
+                    continue_function = false;
                 }
-            }
+                if (continue_function) { // kinda ugly but you can't use continue inside a function ofc...
+                    let recipient = tmp_msg.mentions.users.array()[0];
+                    recipient.send(tmp_msg_content_array.join('\n'))
+                             .then(send_msg => {
+                                 tmp_msg.edit('**Message successful sent to: ' + recipient + ':**\n' + send_msg.content + '\n')
+                                        .then(() => {
+                                            pair[1].stop(); // stop the collector that was related to the message
+                                        }).catch(console.error);
+                             });
+                }
+            });
         }
+        msgs = remaining_msgs;
     }
-    else if (current_state === 'asked_end_night') {
-        if (emo_name === emojis.send.name) {
-            reaction.message.channel.fetchMessage(reaction.message.id)
-                    .then(tmp_msg => {
-                        let time = (tmp_msg.reactions.array().length - 2) * 2;
-                        if (time <= 0) time = 24;
-                        reaction.message.edit('**A ' + time + ' hour day will be started!**');
-                        bot.commands.execute(reaction.message, bot.commands.get('startday'), time);
-                    }).catch(console.error);
+    // let the bot time to update the msgs array - we dont need to rush the clearing of the emojis and listeners
+    bot.setTimeout( () => {
+        if (msgs.length === 0 || (msgs.length === 1 && msgs[0][0] === 'send/cancel')) {
+            msgs.map(pair => pair[1].stop());
+            process.setMaxListeners(10); // reset the maximum of event listeners back to node.js defaults 10
         }
-        collectors.map(col => col.stop());
-        collectors = [];
-    }
+    }, 5000);
 }
 
 exports.info = {
     name       : 'nm',
     usage      : 'nm',
-    description: '\n1. Shows a menue to send alive (or just killed) players messages what happend last/this night\n' +
-                 '2. Tries to identify the player that died this night and can change their roles accordingly\n' +
-                 '3. Can be used to initiate the next day immediatly after'
+    description: 'Shows a menue to send alive (or just killed) players messages what happend last/this night'
 };

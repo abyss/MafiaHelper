@@ -79,7 +79,7 @@ bot.on('ready', () => {
 
     bot.user.setGame(`${config.prefix}help`);
 
-    bot.setInterval(() => {bot.mafia.eod_check();}, 1000);
+    bot.setInterval(() => {bot.mafia.phaseTimer();}, 1000);
 
     logger.info('Bot loaded');
     logger.info(`Use the following link to invite ${bot.user.username} to your server:\n` + chalk.blue(invite_template.replace('YOUR_CLIENT_ID', bot.user.id)));

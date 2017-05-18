@@ -32,21 +32,21 @@ let emojis = {
         }
     }
 };
-let msgs   = [], collectors = [], killed_people = [], members_with_role = [], current_state;
+let msgs   = [], collectors = [], killed_people = [], alive_players = [], current_state;
 
 exports.run = function (bot, msg) {
     // The default is 10 open listeners... I need one for each person + one for sending/canceling | maybe reset later?
     process.setMaxListeners(0);
     msgs = [], collectors = [], killed_people = [], current_state = 'editing_messages';
     // admin permission check
-    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.mods.indexOf(msg.author.id) < 0)) {
+    if (!msg.member.hasPermission('ADMINISTRATOR') && !bot.mafia.isMod(msg.author.id)) {
         msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
-    members_with_role = msg.guild.roles.get(bot.mafia.data.players.alive).members.array();
+    alive_players = bot.mafia.getRole().members.array();
     // iterate over all alive players and send one message per player to the(secret) channel with emoji-reactions as menu
     msg.channel.send('__**----------- Night Message Menu -----------**__');
-    for (let member of members_with_role) {
+    for (let member of alive_players) {
         msg.channel.send('**Send ' + member + ' following night message:**\n')
            .then(tmp_msg => {
                msgs.push(tmp_msg.id);
@@ -171,9 +171,9 @@ function _reactionEventMessageSendCancel(reaction, bot) {
         reaction.message.edit('**End the night now?**\n*24h by default or 2h per additional emoji you react with to' + ' this message');
         if (emo_name === emojis.send.name) {
             for (let user of killed_people) {
-                for (let member of members_with_role) {
+                for (let member of alive_players) {
                     if (member.user === user) {
-                        member.removeRole(bot.mafia.data.players.alive).catch(console.error);
+                        member.removeRole(bot.mafia.getRoleID()).catch(console.error);
                         member.addRole(bot.mafia.data.players.dead).catch(console.error);
                     }
                 }

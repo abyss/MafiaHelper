@@ -1,11 +1,14 @@
+const _ = require('lodash');
+
 exports.run = function (bot, msg, args) {
-    if (!msg.member.hasPermission('ADMINISTRATOR') && (bot.mafia.data.mods.indexOf(msg.author.id) < 0)) {
+    if (!msg.member.hasPermission('ADMINISTRATOR') && !bot.mafia.isMod(msg.author.id)) {
         msg.channel.send(':negative_squared_cross_mark:  |  You are not a game moderator.');
         return;
     }
 
     if (args.length < 1) {
-        msg.channel.send(`:ballot_box:  |  Current vote needed to lynch: **${bot.mafia.data.majority}**`);
+        let majority = _.get(bot.mafia.data, 'majority', 0);
+        msg.channel.send(`:ballot_box:  |  Current vote needed to lynch: **${majority}**`);
         return;
     }
 

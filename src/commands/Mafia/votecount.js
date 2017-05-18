@@ -1,5 +1,5 @@
 exports.run = function (bot, msg) {
-    let output = bot.mafia.buildVoteOutput();
+    let output = bot.mafia.voteCountOutput();
     if (output) {
         msg.channel.send(output);
     }

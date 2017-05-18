@@ -1,4 +1,3 @@
-const _ = require('lodash');
 // to add options/change gui: simply add/change this
 let gui = {
     reset      : {emoji: '♻',  text: 'Reset the content of this message\n'},
@@ -42,15 +41,15 @@ exports.run = function (bot, msg) {
     }
 
     // The node.js default is 10 open listeners... I need one for each person + one for sending/canceling will be reset to 10 again at the end
-    process.setMaxListeners(0);
+    process.setMaxListeners(100);
 
     msgs = [];
-    alive_players = bot.mafia.getRole().members.array();
+    alive_players = bot.mafia.getPlayers();
 
     // iterate over all alive players and send one message per player to the (hopefully secret) channel, with emoji-reactions as menu
     msg.channel.send('__**----------- Night Message Menu -----------**__');
-    for (let member of alive_players) {
-        msg.channel.send('**Send ' + member + ' following night message:**\nYou slept peacefully.')
+    for (let [, user] of alive_players) {
+        msg.channel.send('**Send ' + user + ' (alias ' + user.displayName + ') following night message:**\nYou slept peacefully.')
            .then(tmp_msg => {
                // create reaction collector to log the emoji reactions TODO: Make an utilityfunction to create menus with collectors
                let collector = tmp_msg.createReactionCollector((_, user) => [msg.author.id].concat(bot.mafia.getModsID()).indexOf(user.id) > -1, {time: 1800000});
@@ -81,9 +80,9 @@ exports.run = function (bot, msg) {
     // send legend & send + cancel button & create reaction collector + store it for later use as above
     msg.channel.send(gui.legend_text())
        .then(tmp_msg => {
-           // this somehow fails to make them appear in always the same order...
+           // this somehow fails to make them appear in always the same order... not to important tho
            tmp_msg.react(gui.send.emoji).then(tmp_msg.react(gui.abort.emoji)).catch(console.log);
-           let collector = tmp_msg.createReactionCollector((_, user) => [msg.author.id].concat(bot.mafia.getModsID()).indexOf(user.id) > -1, {time: 1800000});
+           let collector = tmp_msg.createReactionCollector((a, user) => [msg.author.id].concat(bot.mafia.getModsID()).indexOf(user.id) > -1, {time: 1800000});
            msgs.push(['send/cancel', collector]);
            collector.on('collect', reaction => _reactionEventMessageSendCancel(reaction, bot));
            collector.on('end', reaction => {
@@ -113,14 +112,12 @@ function _reactionEventMessageGroup(reaction, own_msg, bot) {
     }
     // Handling of custom messages - only accepts messages from the one who initiated the command
     if (reaction.emoji.name === gui.custom.emoji) {
-        msg.channel.send('\n\n**Enter your custom message for **' + msg.mentions.users.array()[0])
-           .then(send_msg => {
+        msg.channel.send('\n\n**Enter your custom message.**') // + msg.mentions.users.array()[0])
+           .then(() => {
                // waits for the next message (timeout 5 min) of the author and add the content of it to this persons 'to send messages' list
                msg.channel.awaitMessages(m => [own_msg.author.id].concat(bot.mafia.getModsID()).indexOf(m.author.id) > -1, {max: 1, time: 300000})
                   .then(collected => {
                       msg.edit(msg.content + '\n' + collected.array()[0]);
-                      send_msg.delete();
-                      collected.array()[0].delete(); // dont know what permissions the bot will have so... maybe just comment that out
                   });
            });
         return;
@@ -150,23 +147,26 @@ function _reactionEventMessageSendCancel(reaction, bot) {
             }
             // need to get the message again... content could have canged...
             reaction.message.channel.fetchMessage(pair[0]).then(tmp_msg => {
+                let recipient_id          = tmp_msg.content.split('<@')[1];
+                recipient_id = recipient_id.replace('!','');
+                recipient_id = recipient_id.split('>')[0];
+                let recipient             = alive_players.get(recipient_id);
                 let tmp_msg_content_array = tmp_msg.content.split('\n').splice(1);
-                let continue_function = true;
+                let continue_function     = true;
                 if (tmp_msg_content_array.length === 0) {
                     remaining_msgs.push(pair);
                     continue_function = false;
                 }
                 if (continue_function) { // kinda ugly but you can't use continue inside a function ofc...
-                    let recipient = tmp_msg.mentions.users.array()[0];
                     recipient.send(tmp_msg_content_array.join('\n'))
                              .then(send_msg => {
-                                 tmp_msg.edit('**Message successful sent to: ' + recipient + ':**\n' + send_msg.content + '\n')
+                                 tmp_msg.edit('**Message successful sent to: ' + recipient + ' (alias ' + recipient.displayName + '):**\n' + send_msg.content + '\n')
                                         .then(() => {
                                             pair[1].stop(); // stop the collector that was related to the message
                                         }).catch(console.error);
                              });
                 }
-            });
+            }).catch(console.error);
         }
         msgs = remaining_msgs;
     }

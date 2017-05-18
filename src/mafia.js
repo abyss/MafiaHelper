@@ -341,11 +341,11 @@ class MafiaGame {
 
             if (phase === PHASE_DAY) {
                 channel.send(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**');
-                this.sendMods(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.');
+                this.sendMods(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**');
                 this.setPhase(PHASE_DUSK);
             } else if (phase === PHASE_NIGHT) {
-                channel.send(':exclamation:  **| The Night Phase has ended.**\n\n:city_dusk:  **|  It is currently Dawn. The Day Phase will begin when a Mod starts it.**');
-                this.sendMods(':exclamation:  **| The Night Phase has ended.**');
+                channel.send(':exclamation:  **|  The Night Phase has ended.**\n\n:city_dusk:  **|  It is currently Dawn. The Day Phase will begin when a Mod starts it.**');
+                this.sendMods(':exclamation:  **|  The Night Phase has ended.**');
                 this.setPhase(PHASE_DAWN);
             }
         }

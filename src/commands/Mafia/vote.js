@@ -2,6 +2,10 @@ exports.run = function (bot, msg, args) {
     if (bot.mafia.isMonitoredChannel(msg.channel.id)) {
         const error_response = `:negative_squared_cross_mark:  |  Please vote for a player by mentioning them, or use \`${bot.config.prefix}vote nolynch\` or \`${bot.config.prefix}unvote\``;
 
+        if (bot.mafia.data.phase !== 2) { // PHASE_DAY
+            return;
+        }
+
         if (args.length < 1) {
             msg.channel.send(error_response);
             return;
@@ -53,7 +57,7 @@ exports.run = function (bot, msg, args) {
             if (lynched_user) {
                 msg.channel.send(`\u200b\n:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**`);
                 msg.channel.overwritePermissions(role, {'SEND_MESSAGES': false});
-                bot.mafia.sendMods(`**|  Majority has been reached and <@${lynched_user.id}> has been lynched.**`);
+                bot.mafia.sendMods(`:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**`);
                 bot.mafia.setPhase(3); // PHASE_DUSK
                 // setPhase saves the bot.
             } else {

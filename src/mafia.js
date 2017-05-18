@@ -101,6 +101,13 @@ class MafiaGame {
         return _.get(this.data, 'primary.role', null);
     }
 
+    getPlayers() {
+        // Returns a Discord.js Collection of GuildMembers
+        let role = this.getRole();
+        if (!role) { return; }
+        return role.members;
+    }
+
     getMafiaRole() {
         let roleID = _.get(this.data, 'mafia.role', null);
         let guild = this.getMafiaGuild();
@@ -111,6 +118,13 @@ class MafiaGame {
         } else {
             return null;
         }
+    }
+
+    getMafiaPlayers() {
+        // Returns a Discord.js Collection of GuildMembers
+        let role = this.getMafiaRole();
+        if (!role) { return; }
+        return role.members;
     }
 
     setPhase(phase) {

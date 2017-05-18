@@ -16,7 +16,7 @@ exports.run = function (bot, msg) {
         msg.channel.send(`:full_moon:  **|  The Night Phase will end in ${toTimer}.**`);
     } else {
         // Unsupported Phase
-        msg.channel.send(':x:  **|  There is currently no Phase.**');
+        msg.channel.send(':x:  **|  There is currently no game running.**');
     }
 };
 

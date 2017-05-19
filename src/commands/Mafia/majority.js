@@ -1,4 +1,3 @@
-const _ = require('lodash');
 
 exports.run = function (bot, msg, args) {
     if (!msg.member.hasPermission('ADMINISTRATOR') && !bot.mafia.isMod(msg.author.id)) {
@@ -7,7 +6,7 @@ exports.run = function (bot, msg, args) {
     }
 
     if (args.length < 1) {
-        let majority = _.get(bot.mafia.data, 'majority', 0);
+        let majority = bot.mafia.majority || 0;
         msg.channel.send(`:ballot_box:  |  Current vote needed to lynch: **${majority}**`);
         return;
     }

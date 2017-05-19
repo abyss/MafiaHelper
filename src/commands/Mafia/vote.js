@@ -3,6 +3,7 @@ exports.run = function (bot, msg, args) {
         const error_response = `:negative_squared_cross_mark:  |  Please vote for a player by mentioning them, or use \`${bot.config.prefix}vote nolynch\` or \`${bot.config.prefix}unvote\``;
 
         if (bot.mafia.data.phase !== 2) { // PHASE_DAY
+            msg.channel.send(':negative_squared_cross_mark:  **|  It\'s not currently day...**');
             return;
         }
 
@@ -51,18 +52,17 @@ exports.run = function (bot, msg, args) {
 
         let lynched = bot.mafia.checkLynch();
         if (lynched) {
-            let lynched_user = bot.mafia.getGuild().members.get(lynched);
-            let role = bot.mafia.getRole();
-
-            if (lynched_user) {
-                msg.channel.send(`\u200b\n:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**`);
-                msg.channel.overwritePermissions(role, {'SEND_MESSAGES': false});
-                bot.mafia.sendMods(`:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**`);
-                bot.mafia.setPhase(3); // PHASE_DUSK
-                // setPhase saves the bot.
+            if (lynched === '0') {
+                bot.mafia.endDay('\u200b\n:exclamation:  **|  Majority has been reached and no one has been lynched.**');
             } else {
-                bot.mafia.sendMods(`ERROR, TELL ABYSS: Majority reached, player ID: ${lynched} not found`);
-                bot.logger.severe(`Majority reached, player ID: ${lynched} not found`);
+                let lynched_user = bot.mafia.getGuild().members.get(lynched);
+
+                if (lynched_user) {
+                    bot.mafia.endDay(`\u200b\n:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**`);
+                } else {
+                    bot.logger.severe(`Majority reached, player ID: ${lynched} not found`);
+                    bot.mafia.endDay(`\u200b\n:exclamation:  **|  ERROR, TELL ABYSS: Majority has been reached but I can\'t tell who (${lynched}) is lynched.**`);
+                }
             }
         }
     }

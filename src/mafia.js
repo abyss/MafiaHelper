@@ -318,6 +318,35 @@ class MafiaGame {
         this.saveDB();
     }
 
+    endDay(message) {
+        const APPEND = '\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**';
+        let channel = this.getChannel();
+        let role = this.getRole();
+        if (!(channel && role)) { return; }
+
+        this.sendMods(message);
+        channel.send(message + APPEND);
+
+        channel.overwritePermissions(role, {'SEND_MESSAGES': false});
+        this.setPhase(PHASE_DUSK);
+    }
+
+    endNight(message) {
+        const APPEND = '\n\n:city_dusk:  **|  It is currently Dawn. The Day Phase will begin when a Mod starts it.**';
+        let channel = this.getChannel();
+        let mafiaChannel = this.getMafiaChannel();
+        let mafiaRole = this.getMafiaRole();
+
+        if (!(channel && mafiaChannel && mafiaRole)) { return; }
+
+        this.sendMods(message);
+        channel.send(message + APPEND);
+        mafiaChannel.send(message + APPEND);
+
+        mafiaChannel.overwritePermissions(mafiaRole, {'SEND_MESSAGES': false});
+        this.setPhase(PHASE_DAWN);
+    }
+
     clearVotes() {
         this.data.votes = [];
 
@@ -329,38 +358,16 @@ class MafiaGame {
 
         let phase = _.get(this.data, 'phase', 0);
         let timer = _.get(this.data, 'timer', null);
-
         if (!(timer && phase)) { return; }
 
         if (phase === PHASE_DAWN || phase === PHASE_DUSK) { return; }
 
         if (timer.isBefore()) {
-            let channel;
-            let role;
 
             if (phase === PHASE_DAY) {
-                channel = this.getChannel();
-                role = _.get(this.data, 'primary.role', null);
+                this.endDay(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**');
             } else if (phase === PHASE_NIGHT) {
-                channel = this.getMafiaChannel();
-                role = _.get(this.data, 'mafia.role', null);
-            }
-
-            if (!channel) { return; }
-
-            let guild = channel.guild;
-
-            if (!(_.get(guild, 'available', false) && role)) { return; }
-            channel.overwritePermissions(role, {'SEND_MESSAGES': false});
-
-            if (phase === PHASE_DAY) {
-                channel.send(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**');
-                this.sendMods(':exclamation:  **|  Majority was not reached before the end of the Day, so no one has been lynched.**');
-                this.setPhase(PHASE_DUSK);
-            } else if (phase === PHASE_NIGHT) {
-                channel.send(':exclamation:  **|  The Night Phase has ended.**\n\n:city_dusk:  **|  It is currently Dawn. The Day Phase will begin when a Mod starts it.**');
-                this.sendMods(':exclamation:  **|  The Night Phase has ended.**');
-                this.setPhase(PHASE_DAWN);
+                this.endNight(':exclamation:  **|  The Night Phase has ended.**');
             }
         }
     }

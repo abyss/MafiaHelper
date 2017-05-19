@@ -1,7 +1,7 @@
 {
-  "name": "sharpcore",
-  "version": "1.0.0",
-  "description": "A Discord.js user-bot written by Abyss",
+  "name": "mafiahelper",
+  "version": "2.1.0",
+  "description": "A Discord.js bot for assisting with running Mafia games",
   "main": "src/bot.js",
   "scripts": {
     "start": "gulp"

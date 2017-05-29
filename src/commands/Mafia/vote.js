@@ -64,6 +64,8 @@ exports.run = function (bot, msg, args) {
                     bot.mafia.endDay(`\u200b\n:exclamation:  **|  ERROR, TELL ABYSS: Majority has been reached but I can\'t tell who (${lynched}) is lynched.**`);
                 }
             }
+        } else {
+            bot.mafia.saveDB();
         }
     }
 };

@@ -37,13 +37,7 @@ exports.run = function (bot, msg, args) {
             return;
         }
 
-        if (typeof bot.mafia.data.votes === 'undefined') {
-            bot.mafia.data.votes = [];
-        }
-
-        bot.mafia.data.votes = bot.mafia.data.votes.filter(vote => vote.voter !== msg.author.id);
-        bot.mafia.data.votes.push(vote);
-
+        bot.mafia.submitVote(vote);
 
         let output = bot.mafia.voteCountOutput();
         if (output) {

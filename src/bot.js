@@ -56,7 +56,7 @@ let invite_template = 'https://discordapp.com/api/oauth2/authorize?client_id=YOU
 
 bot.on('ready', () => {
     bot.utils = require('./utils');
-
+	
     commands.loadCommands(path.join(__dirname, 'commands'));
 
     (title => {

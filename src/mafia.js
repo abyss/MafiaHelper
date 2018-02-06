@@ -30,10 +30,20 @@ class MafiaGame {
         "guild": "0"
     },
 
+    "mason": {
+        "role": "0",
+        "channel": "0",
+        "guild": "0"
+    },
+
     "phase": 0, // 1: Dawn, 2: Day, 3: Dusk, 4: Night
     "timer": "moment()",
 
     "votes": [],
+    "votepower": [{
+        "user": "0",
+        "power": 0
+    }],
     "majority": 0
 }
 */
@@ -73,6 +83,12 @@ class MafiaGame {
         return this.bot.guilds.get(guildID);
     }
 
+    getMasonGuild() {
+        let guildID = _.get(this.data, 'mason.guild', null);
+        if (!guildID) { return null; }
+        return this.bot.guilds.get(guildID);
+    }
+
     getChannel() {
         let channelID = _.get(this.data, 'primary.channel', null);
         if (!channelID) { return null; }
@@ -81,6 +97,12 @@ class MafiaGame {
 
     getMafiaChannel() {
         let channelID = _.get(this.data, 'mafia.channel', null);
+        if (!channelID) {return null; }
+        return this.bot.channels.get(channelID);
+    }
+
+    getMasonChannel() {
+        let channelID = _.get(this.data, 'mason.channel', null);
         if (!channelID) {return null; }
         return this.bot.channels.get(channelID);
     }
@@ -127,6 +149,25 @@ class MafiaGame {
         return role.members;
     }
 
+    getMasonRole() {
+        let roleID = _.get(this.data, 'mason.role', null);
+        let guild = this.getMasonGuild();
+        if (!(roleID && _.get(guild, 'available', false))) { return null; }
+        let role = guild.roles.get(roleID);
+        if (role) {
+            return role;
+        } else {
+            return null;
+        }
+    }
+
+    getMasonPlayers() {
+        // Returns a Discord.js Collection of GuildMembers
+        let role = this.getMasonRole();
+        if (!role) { return; }
+        return role.members;
+    }
+
     setPhase(phase) {
         _.set(this.data, 'phase', phase);
         this.saveDB();
@@ -140,6 +181,11 @@ class MafiaGame {
         }
 
         chan = _.get(this.data, 'mafia.channel', null);
+        if (chan) {
+            channels.push(chan);
+        }
+
+        chan = _.get(this.data, 'mason.channel', null);
         if (chan) {
             channels.push(chan);
         }
@@ -189,6 +235,34 @@ class MafiaGame {
                 moduser.send(msg);
             });
         });
+    }
+
+    submitVote(vote) {
+        // vote = {
+        //     voter: "0",
+        //     target: "0"
+        // }
+
+        if (typeof this.data.votes === 'undefined') {
+            this.data.votes = [];
+        }
+
+        this.data.votes = this.data.votes.filter(x => x.voter !== vote.voter);
+
+        const votePowerArray = _.get(this.data, 'votepower', []);
+
+        const limitedVotePowerArray = votePowerArray.filter(x => x.voter === vote.voter);
+        let votePower;
+
+        if (limitedVotePowerArray.length > 0) {
+            votePower = limitedVotePowerArray[0].power;
+        } else {
+            votePower = 1;
+        }
+
+        for(let i = 0; i < votePower; i += 1) {
+            this.data.votes.push(vote);
+        }
     }
 
     buildVoteTable() {
@@ -304,6 +378,8 @@ class MafiaGame {
         let night_end = now.add(hours, 'hours');
         let role = this.getMafiaRole();
         let channel = this.getMafiaChannel();
+        let masonRole = this.getMasonRole();
+        let masonChannel = this.getMasonChannel();
 
         if (!(role && channel)) {
             throw 'Please make sure you \`setmafia\` first.';
@@ -314,6 +390,11 @@ class MafiaGame {
 
         channel.overwritePermissions(role, {'SEND_MESSAGES': true});
         channel.send(':full_moon:  **|  The Night has begun!**');
+
+        if (masonChannel && masonRole) {
+            masonChannel.overwritePermissions(masonRole, {'SEND_MESSAGES': true});
+            masonChannel.send(':full_moon:  **|  The Night has begun!**');
+        }
 
         this.saveDB();
     }
@@ -336,14 +417,24 @@ class MafiaGame {
         let channel = this.getChannel();
         let mafiaChannel = this.getMafiaChannel();
         let mafiaRole = this.getMafiaRole();
+        let masonChannel = this.getMasonChannel();
+        let masonRole = this.getMasonRole();
 
-        if (!(channel && mafiaChannel && mafiaRole)) { return; }
+        if (!channel) { return; }
 
         this.sendMods(message);
         channel.send(message + APPEND);
-        mafiaChannel.send(message + APPEND);
 
-        mafiaChannel.overwritePermissions(mafiaRole, {'SEND_MESSAGES': false});
+        if (mafiaChannel && mafiaRole) {
+            mafiaChannel.send(message + APPEND);
+            mafiaChannel.overwritePermissions(mafiaRole, {'SEND_MESSAGES': false});
+        }
+
+        if (masonChannel && masonRole) {
+            masonChannel.send(message + APPEND);
+            masonChannel.overwritePermissions(masonRole, {'SEND_MESSAGES': false});
+        }
+
         this.setPhase(PHASE_DAWN);
     }
 

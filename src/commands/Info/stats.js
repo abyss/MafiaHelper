@@ -10,6 +10,10 @@ const formatTime = (time) => {
 };
 
 exports.run = (bot, msg) => {
+    if (msg.author.id !== bot.config.owner) {
+        msg.channel.send(`:negative_squared_cross_mark:  |  You are not <@${bot.config.owner}>.`);
+        return;
+    }
 
     msg.channel.send('', {embed:
         bot.utils.embed(`${bot.user.username}'s Stats'`, '***This message will dissappear in 15 seconds.***', [

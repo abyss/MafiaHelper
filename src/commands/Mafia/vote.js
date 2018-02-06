@@ -12,7 +12,7 @@ exports.run = function (bot, msg, args) {
             return;
         }
 
-        if (!msg.member.roles.has(bot.mafia.getRoleID())) {
+        if (!msg.member.roles.has(bot.mafia.getFactionRoleID('primary'))) {
             msg.channel.send(':negative_squared_cross_mark:  |  You must be a player to vote.');
             return;
         }
@@ -25,7 +25,7 @@ exports.run = function (bot, msg, args) {
             let target = msg.mentions.members.last();
             vote.target = target.id;
 
-            if (!target.roles.has(bot.mafia.getRoleID())) {
+            if (!target.roles.has(bot.mafia.getFactionRoleID('primary'))) {
                 msg.channel.send(error_response);
                 return;
             }
@@ -49,7 +49,7 @@ exports.run = function (bot, msg, args) {
             if (lynched === '0') {
                 bot.mafia.endDay('\u200b\n:exclamation:  **|  Majority has been reached and no one has been lynched.**');
             } else {
-                let lynched_user = bot.mafia.getGuild().members.get(lynched);
+                let lynched_user = bot.mafia.getFactionGuild('primary').members.get(lynched);
 
                 if (lynched_user) {
                     bot.mafia.endDay(`\u200b\n:exclamation:  **|  Majority has been reached and <@${lynched_user.id}> has been lynched.**`);

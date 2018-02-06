@@ -36,6 +36,18 @@ class MafiaGame {
         "guild": "0"
     },
 
+    "werewolf": {
+        "role": "0",
+        "channel": "0",
+        "guild": "0"
+    },
+
+    "monk": {
+        "role": "0",
+        "channel": "0",
+        "guild": "0"
+    },
+
     "phase": 0, // 1: Dawn, 2: Day, 3: Dusk, 4: Night
     "timer": "moment()",
 
@@ -71,45 +83,69 @@ class MafiaGame {
         });
     }
 
-    getGuild() {
-        let guildID = _.get(this.data, 'primary.guild', null);
+    // getGuild() {
+    //     let guildID = _.get(this.data, 'primary.guild', null);
+    //     if (!guildID) { return null; }
+    //     return this.bot.guilds.get(guildID);
+    // }
+
+    getFactionGuild(faction) {
+        let guildID = _.get(this.data, `${faction}.guild`, null);
         if (!guildID) { return null; }
         return this.bot.guilds.get(guildID);
     }
 
-    getMafiaGuild() {
-        let guildID = _.get(this.data, 'mafia.guild', null);
-        if (!guildID) { return null; }
-        return this.bot.guilds.get(guildID);
-    }
+    // getMafiaGuild() {
+    //     let guildID = _.get(this.data, 'mafia.guild', null);
+    //     if (!guildID) { return null; }
+    //     return this.bot.guilds.get(guildID);
+    // }
 
-    getMasonGuild() {
-        let guildID = _.get(this.data, 'mason.guild', null);
-        if (!guildID) { return null; }
-        return this.bot.guilds.get(guildID);
-    }
+    // getMasonGuild() {
+    //     let guildID = _.get(this.data, 'mason.guild', null);
+    //     if (!guildID) { return null; }
+    //     return this.bot.guilds.get(guildID);
+    // }
 
-    getChannel() {
-        let channelID = _.get(this.data, 'primary.channel', null);
+    // getChannel() {
+    //     let channelID = _.get(this.data, 'primary.channel', null);
+    //     if (!channelID) { return null; }
+    //     return this.bot.channels.get(channelID);
+    // }
+
+    getFactionChannel(faction) {
+        let channelID = _.get(this.data, `${faction}.channel`, null);
         if (!channelID) { return null; }
         return this.bot.channels.get(channelID);
     }
 
-    getMafiaChannel() {
-        let channelID = _.get(this.data, 'mafia.channel', null);
-        if (!channelID) {return null; }
-        return this.bot.channels.get(channelID);
-    }
+    // getMafiaChannel() {
+    //     let channelID = _.get(this.data, 'mafia.channel', null);
+    //     if (!channelID) {return null; }
+    //     return this.bot.channels.get(channelID);
+    // }
 
-    getMasonChannel() {
-        let channelID = _.get(this.data, 'mason.channel', null);
-        if (!channelID) {return null; }
-        return this.bot.channels.get(channelID);
-    }
+    // getMasonChannel() {
+    //     let channelID = _.get(this.data, 'mason.channel', null);
+    //     if (!channelID) {return null; }
+    //     return this.bot.channels.get(channelID);
+    // }
 
-    getRole() {
-        let roleID = _.get(this.data, 'primary.role', null);
-        let guild = this.getGuild();
+    // getRole() {
+    //     let roleID = _.get(this.data, 'primary.role', null);
+    //     let guild = this.getFactionGuild('primary');
+    //     if (!(roleID && _.get(guild, 'available', false))) { return null; }
+    //     let role = guild.roles.get(roleID);
+    //     if (role) {
+    //         return role;
+    //     } else {
+    //         return null;
+    //     }
+    // }
+
+    getFactionRole(faction) {
+        let roleID = _.get(this.data, `${faction}.role`, null);
+        let guild = this.getFactionGuild(faction);
         if (!(roleID && _.get(guild, 'available', false))) { return null; }
         let role = guild.roles.get(roleID);
         if (role) {
@@ -119,54 +155,65 @@ class MafiaGame {
         }
     }
 
-    getRoleID() {
-        return _.get(this.data, 'primary.role', null);
+    // getRoleID() {
+    //     return _.get(this.data, 'primary.role', null);
+    // }
+
+    getFactionRoleID(faction) {
+        return _.get(this.data, `${faction}.role`, null);
     }
 
-    getPlayers() {
+    // getPlayers() {
+    //     // Returns a Discord.js Collection of GuildMembers
+    //     let role = this.getRole();
+    //     if (!role) { return; }
+    //     return role.members;
+    // }
+
+    getFactionPlayers(faction) {
         // Returns a Discord.js Collection of GuildMembers
-        let role = this.getRole();
+        let role = this.getFactionRole(faction);
         if (!role) { return; }
         return role.members;
     }
 
-    getMafiaRole() {
-        let roleID = _.get(this.data, 'mafia.role', null);
-        let guild = this.getMafiaGuild();
-        if (!(roleID && _.get(guild, 'available', false))) { return null; }
-        let role = guild.roles.get(roleID);
-        if (role) {
-            return role;
-        } else {
-            return null;
-        }
-    }
+    // getMafiaRole() {
+    //     let roleID = _.get(this.data, 'mafia.role', null);
+    //     let guild = this.getFactionGuild('mafia');
+    //     if (!(roleID && _.get(guild, 'available', false))) { return null; }
+    //     let role = guild.roles.get(roleID);
+    //     if (role) {
+    //         return role;
+    //     } else {
+    //         return null;
+    //     }
+    // }
 
-    getMafiaPlayers() {
-        // Returns a Discord.js Collection of GuildMembers
-        let role = this.getMafiaRole();
-        if (!role) { return; }
-        return role.members;
-    }
+    // getMafiaPlayers() {
+    //     // Returns a Discord.js Collection of GuildMembers
+    //     let role = this.getMafiaRole();
+    //     if (!role) { return; }
+    //     return role.members;
+    // }
 
-    getMasonRole() {
-        let roleID = _.get(this.data, 'mason.role', null);
-        let guild = this.getMasonGuild();
-        if (!(roleID && _.get(guild, 'available', false))) { return null; }
-        let role = guild.roles.get(roleID);
-        if (role) {
-            return role;
-        } else {
-            return null;
-        }
-    }
+    // getMasonRole() {
+    //     let roleID = _.get(this.data, 'mason.role', null);
+    //     let guild = this.getMasonGuild();
+    //     if (!(roleID && _.get(guild, 'available', false))) { return null; }
+    //     let role = guild.roles.get(roleID);
+    //     if (role) {
+    //         return role;
+    //     } else {
+    //         return null;
+    //     }
+    // }
 
-    getMasonPlayers() {
-        // Returns a Discord.js Collection of GuildMembers
-        let role = this.getMasonRole();
-        if (!role) { return; }
-        return role.members;
-    }
+    // getMasonPlayers() {
+    //     // Returns a Discord.js Collection of GuildMembers
+    //     let role = this.getMasonRole();
+    //     if (!role) { return; }
+    //     return role.members;
+    // }
 
     setPhase(phase) {
         _.set(this.data, 'phase', phase);
@@ -175,20 +222,14 @@ class MafiaGame {
 
     getMonitoredChannelIDs() {
         let channels = [];
-        let chan = _.get(this.data, 'primary.channel', null);
-        if (chan) {
-            channels.push(chan);
-        }
+        let possibleChannels = ['primary', 'mafia', 'mason', 'werewolf', 'monk'];
 
-        chan = _.get(this.data, 'mafia.channel', null);
-        if (chan) {
-            channels.push(chan);
-        }
-
-        chan = _.get(this.data, 'mason.channel', null);
-        if (chan) {
-            channels.push(chan);
-        }
+        possibleChannels.forEach((faction) => {
+            let chan = _.get(this.data, `${faction}.channel`, null);
+            if (chan) {
+                channels.push(chan);
+            }
+        });
 
         return channels;
     }
@@ -302,7 +343,7 @@ class MafiaGame {
     voteCountOutput() {
         let vote_table = this.buildVoteTable();
         let output = [];
-        let guild = this.getGuild();
+        let guild = this.getFactionGuild('primary');
 
         if (!(_.get(guild, 'available', false))) {
             return ':negative_squared_cross_mark:  |  ERROR: Primary Server not available.';
@@ -350,8 +391,8 @@ class MafiaGame {
     startDay(hours) {
         let now = moment();
         let day_end = now.add(hours, 'hours');
-        let role = this.getRole();
-        let channel = this.getChannel();
+        let role = this.getFactionRole('primary');
+        let channel = this.getFactionChannel('primary');
 
         if (!(role && channel)) {
             throw 'Please make sure you \`setgame\` first.';
@@ -376,33 +417,30 @@ class MafiaGame {
     startNight(hours) {
         let now = moment();
         let night_end = now.add(hours, 'hours');
-        let role = this.getMafiaRole();
-        let channel = this.getMafiaChannel();
-        let masonRole = this.getMasonRole();
-        let masonChannel = this.getMasonChannel();
 
-        if (!(role && channel)) {
-            throw 'Please make sure you \`setmafia\` first.';
-        }
+        // Only roles that have a night chat
+        let nightRoleList = ['mafia', 'mason', 'werewolf', 'monk'];
 
         this.data.timer = night_end;
         this.data.phase = PHASE_NIGHT;
 
-        channel.overwritePermissions(role, {'SEND_MESSAGES': true});
-        channel.send(':full_moon:  **|  The Night has begun!**');
+        nightRoleList.forEach((faction) => {
+            let factionRole = this.getFactionRole(faction);
+            let factionChannel = this.getFactionChannel(faction);
 
-        if (masonChannel && masonRole) {
-            masonChannel.overwritePermissions(masonRole, {'SEND_MESSAGES': true});
-            masonChannel.send(':full_moon:  **|  The Night has begun!**');
-        }
+            if (factionChannel && factionRole) {
+                factionChannel.overwritePermissions(factionRole, {'SEND_MESSAGES': true});
+                factionChannel.send(':full_moon:  **|  The Night has begun!**');
+            }
+        });
 
         this.saveDB();
     }
 
     endDay(message) {
         const APPEND = '\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**';
-        let channel = this.getChannel();
-        let role = this.getRole();
+        let channel = this.getFactionChannel('primary');
+        let role = this.getFactionRole('primary');
         if (!(channel && role)) { return; }
 
         this.sendMods(message);
@@ -414,26 +452,26 @@ class MafiaGame {
 
     endNight(message) {
         const APPEND = '\n\n:city_dusk:  **|  It is currently Dawn. The Day Phase will begin when a Mod starts it.**';
-        let channel = this.getChannel();
-        let mafiaChannel = this.getMafiaChannel();
-        let mafiaRole = this.getMafiaRole();
-        let masonChannel = this.getMasonChannel();
-        let masonRole = this.getMasonRole();
 
-        if (!channel) { return; }
+        let primaryChannel = this.getFactionChannel('primary');
+
+        // Only roles that have a night chat
+        let nightRoleList = ['mafia', 'mason', 'werewolf', 'monk'];
+
+        if (!primaryChannel) { return; }
 
         this.sendMods(message);
-        channel.send(message + APPEND);
+        primaryChannel.send(message + APPEND);
 
-        if (mafiaChannel && mafiaRole) {
-            mafiaChannel.send(message + APPEND);
-            mafiaChannel.overwritePermissions(mafiaRole, {'SEND_MESSAGES': false});
-        }
+        nightRoleList.forEach((faction) => {
+            let factionRole = this.getFactionRole(faction);
+            let factionChannel = this.getFactionChannel(faction);
 
-        if (masonChannel && masonRole) {
-            masonChannel.send(message + APPEND);
-            masonChannel.overwritePermissions(masonRole, {'SEND_MESSAGES': false});
-        }
+            if (factionChannel && factionRole) {
+                factionChannel.send(message + APPEND);
+                factionChannel.overwritePermissions(factionRole, {'SEND_MESSAGES': false});
+            }
+        });
 
         this.setPhase(PHASE_DAWN);
     }

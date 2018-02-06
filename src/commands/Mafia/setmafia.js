@@ -8,7 +8,10 @@ exports.run = function (bot, msg, args) {
     }
 
     if (args.length < 1) {
-        msg.channel.send('This isnt implemented yet, please tag the mafia role.');
+        _.set(bot.mafia.data, 'mafia.role', 0);
+        _.set(bot.mafia.data, 'mafia.guild', 0);
+        _.set(bot.mafia.data, 'mafia.channel', 0);
+        msg.channel.send('BETA: You have zeroed out the mafia role data. Let Abyss know if anything breaks.');
         return;
     }
 

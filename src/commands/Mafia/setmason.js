@@ -8,7 +8,10 @@ exports.run = function (bot, msg, args) {
     }
 
     if (args.length < 1) {
-        msg.channel.send('This isnt implemented yet, please tag the mason role.');
+        _.set(bot.mafia.data, 'mason.role', 0);
+        _.set(bot.mafia.data, 'mason.guild', 0);
+        _.set(bot.mafia.data, 'mason.channel', 0);
+        msg.channel.send('BETA: You have zeroed out the mason role data. Let Abyss know if anything breaks.');
         return;
     }
 
@@ -30,5 +33,5 @@ exports.run = function (bot, msg, args) {
 exports.info = {
     name: 'setmason',
     usage: 'setmason <@role>',
-    description: 'Sets the player role, channel, and server for the Mason.'
+    description: 'Sets the player role, channel, and server for the Masons.'
 };

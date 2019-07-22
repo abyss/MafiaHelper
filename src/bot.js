@@ -47,7 +47,7 @@ const config = bot.config;
 // Load the MafiaGame Object
 bot.mafia = require('./mafia')(bot);
 
-if (!config.botToken || !/^[A-Za-z0-9\._\-]+$/.test(config.botToken)) {
+if (!config.botToken || !/^[A-Za-z0-9._-]+$/.test(config.botToken)) {
     logger.severe('Config is missing a valid bot token! Please acquire one at https://discordapp.com/developers/applications/me');
     process.exit(1);
 }
@@ -56,7 +56,7 @@ let invite_template = 'https://discordapp.com/api/oauth2/authorize?client_id=YOU
 
 bot.on('ready', () => {
     bot.utils = require('./utils');
-	
+
     commands.loadCommands(path.join(__dirname, 'commands'));
 
     (title => {
@@ -77,13 +77,12 @@ bot.on('ready', () => {
     delete bot.user.email;
     delete bot.user.verified;
 
-    bot.user.setGame(`${config.prefix}help`);
+    bot.user.setActivity('Mafia', { type: 'PLAYING' });
 
     bot.setInterval(() => {bot.mafia.phaseTimer();}, 1000);
 
     logger.info('Bot loaded');
     logger.info(`Use the following link to invite ${bot.user.username} to your server:\n` + chalk.blue(invite_template.replace('YOUR_CLIENT_ID', bot.user.id)));
-
 });
 
 bot.on('message', msg => {
@@ -121,10 +120,15 @@ bot.on('messageDelete', (msg) => {
 });
 
 process.on('uncaughtException', (err) => {
-    let errorMsg = (err.stack || err || '').toString().replace(new RegExp(`${__dirname}\/`, 'g'), './');
+    let errorMsg = (err.stack || err || '').toString().replace(new RegExp(`${__dirname}/`, 'g'), './');
     logger.severe(errorMsg);
 });
 
 process.on('unhandledRejection', err => {
     logger.severe('Uncaught Promise error: \n' + err.stack);
+});
+
+process.on('SIGINT', () => {
+    bot.destroy();
+    process.exit(0);
 });

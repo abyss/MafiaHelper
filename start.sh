@@ -1,2 +1,2 @@
 #!/bin/sh
-yarn start
+npm start

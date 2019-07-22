@@ -15,22 +15,17 @@ It's fairly simple, and it runs regularly on my server for the Mafia games we ru
 ## Usage
 ### Requirements
 - [`node`](https://nodejs.org)
-- [`yarn`](https://yarnpkg.com/docs/install) (Recommended)
-
-If you have `npm` but not `yarn`, you'll want to check it out. If not, it is up to you to figure out the appropriate `npm` commands.
-
-> "Yarn is faster and more reliable." - [Rayzr522](https://github.com/Rayzr522)
 
 ### Installing
 
 ```bash
-git clone https://github.com/abyssvi/MafiaHelper.git
+git clone https://github.com/abyss/MafiaHelper.git
 cd MafiaHelper
-yarn
+npm install
 ```
 
 - Rename `config.json.example` in the `src` folder to `config.json`
-- Edit `config.json` and enter your user-token (Obtain one [here](https://discordapp.com/developers/applications/me))
+- Edit `config.json` and enter your user-token (Obtain one [here](https://discordapp.com/developers/applications/))
 
 ### Running
 #### Configuration

@@ -391,8 +391,12 @@ class MafiaGame {
     startDay(hours) {
         let now = moment();
         let day_end = now.add(hours, 'hours');
+
         let role = this.getFactionRole('primary');
         let channel = this.getFactionChannel('primary');
+
+        let masonRole = this.getFactionRole('mason');
+        let masonChannel = this.getFactionChannel('mason');
 
         if (!(role && channel)) {
             throw 'Please make sure you \`setgame\` first.';
@@ -407,8 +411,11 @@ class MafiaGame {
         this.data.majority = majority;
 
         channel.overwritePermissions(role, {'SEND_MESSAGES': true});
+        masonChannel.overwritePermissions(masonRole, {'SEND_MESSAGES': true});
 
         channel.send(':sunny:  **|  The Day has begun!**');
+        masonChannel.send(':sunny:  **|  The Day has begun!**');
+
         this.saveDB();
 
         return true;
@@ -419,7 +426,7 @@ class MafiaGame {
         let night_end = now.add(hours, 'hours');
 
         // Only roles that have a night chat
-        let nightRoleList = ['mafia', 'mason', 'werewolf', 'monk'];
+        let nightRoleList = ['mafia', 'werewolf', 'monk'];
 
         this.data.timer = night_end;
         this.data.phase = PHASE_NIGHT;
@@ -439,14 +446,21 @@ class MafiaGame {
 
     endDay(message) {
         const APPEND = '\n\n:cityscape:  **|  It is currently Dusk. The Night Phase will begin when a Mod starts it.**';
+
         let channel = this.getFactionChannel('primary');
         let role = this.getFactionRole('primary');
+        let masonChannel = this.getFactionChannel('mason');
+        let masonRole = this.getFactionRole('mason');
+
         if (!(channel && role)) { return; }
 
         this.sendMods(message);
         channel.send(message + APPEND);
+        masonChannel.send(message + APPEND);
 
         channel.overwritePermissions(role, {'SEND_MESSAGES': false});
+        masonChannel.overwritePermissions(masonRole, {'SEND_MESSAGES': false});
+
         this.setPhase(PHASE_DUSK);
     }
 
@@ -456,7 +470,7 @@ class MafiaGame {
         let primaryChannel = this.getFactionChannel('primary');
 
         // Only roles that have a night chat
-        let nightRoleList = ['mafia', 'mason', 'werewolf', 'monk'];
+        let nightRoleList = ['mafia', 'werewolf', 'monk'];
 
         if (!primaryChannel) { return; }
 

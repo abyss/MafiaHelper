@@ -576,6 +576,34 @@ class MafiaGame {
 
         return this.beautifyToMoment(timer);
     }
+
+    lockChannel() {
+        let role = this.getFactionRole('primary');
+        let channel = this.getFactionChannel('primary');
+
+        if (!(role && channel)) {
+            throw 'Please make sure you `setgame` first.';
+        }
+
+        channel.overwritePermissions(role, {'SEND_MESSAGES': false});
+        channel.send(':lock:');
+
+        return true;
+    }
+
+    unlockChannel() {
+        let role = this.getFactionRole('primary');
+        let channel = this.getFactionChannel('primary');
+
+        if (!(role && channel)) {
+            throw 'Please make sure you `setgame` first.';
+        }
+
+        channel.overwritePermissions(role, {'SEND_MESSAGES': true});
+        channel.send(':unlock:');
+
+        return true;
+    }
 }
 
 module.exports = function(bot) { return new MafiaGame(bot); };
